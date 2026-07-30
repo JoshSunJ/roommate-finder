@@ -3,8 +3,8 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
-  title: "Roommate Finder",
-  description: "Browse rooms and apartments near campus.",
+  title: "Roommate Finder | Housing, mapped",
+  description: "Find rooms and apartments that work with your city life.",
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

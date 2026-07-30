@@ -36,22 +36,43 @@ export default async function Home({ searchParams }: PageProps) {
     <>
       <Navbar />
       <main className="page-shell">
-        <section className="hero">
-          <p className="eyebrow">Find your next home</p>
-          <h1>Roommate Finder</h1>
-          <p>
-            Browse available rooms near campus. Matching and messaging can come
-            later—first, make it easy to discover a place to live.
-          </p>
+        <section className="hero hero--home">
+          <div className="hero-copy">
+            <p className="eyebrow">San Jose · housing, mapped</p>
+            <h1>
+              Live closer.
+              <br />
+              <span>Move smarter.</span>
+            </h1>
+            <p>
+              Find a room that works with your commute, your budget, and the
+              places that make a new city feel like home.
+            </p>
+            <div className="hero-actions">
+              <a className="button button--primary" href="#listings">
+                Explore homes <span aria-hidden="true">↘</span>
+              </a>
+              <a className="button button--quiet" href="/map">
+                Explore the area <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </div>
+          <div className="hero-orbit" aria-hidden="true">
+            <span className="orbit-label orbit-label--top">CITY GUIDE</span>
+            <span className="orbit-label orbit-label--bottom">YOUR NEXT MOVE</span>
+            <span className="orbit-core">RF</span>
+            <span className="orbit-dot orbit-dot--one" />
+            <span className="orbit-dot orbit-dot--two" />
+          </div>
         </section>
 
-        <section aria-labelledby="available-listings">
+        <section id="listings" aria-labelledby="available-listings">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Available now</p>
-              <h2 id="available-listings">Listings</h2>
+              <p className="eyebrow">01 · Available now</p>
+              <h2 id="available-listings">Homes worth the commute.</h2>
             </div>
-            <p>{listings.length} places found</p>
+            <p className="result-count"><strong>{listings.length}</strong> places found</p>
           </div>
 
           <ListingFilters filters={filters} locations={locations} />
