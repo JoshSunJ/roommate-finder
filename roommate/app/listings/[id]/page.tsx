@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getListingById } from "@/features/listings/service";
+import { formatDistance, getCampus } from "@/features/places/service";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -13,6 +14,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   if (!listing) {
     notFound();
   }
+  const campus = await getCampus();
 
   return (
     <main className="page-shell detail">
@@ -27,6 +29,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <li><strong>{listing.bathroomType}</strong> bathroom</li>
           <li>Available <strong>{listing.availableFrom}</strong></li>
           <li>Posted by <strong>{listing.postedBy}</strong></li>
+          <li><strong>{formatDistance(listing.coordinates, campus.coordinates)}</strong> from SJSU</li>
         </ul>
       </article>
     </main>

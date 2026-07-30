@@ -11,6 +11,7 @@ type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+// the page validates numeric values before calling the service:
 function toOptionalPositiveNumber(value: string | string[] | undefined) {
   if (typeof value !== "string") return undefined;
 

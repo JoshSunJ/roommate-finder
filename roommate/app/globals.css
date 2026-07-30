@@ -37,6 +37,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .brand { color: var(--foreground); font-size: 1.1rem; font-weight: 800; }
+.nav-links { display: flex; gap: 1rem; font-weight: 700; }
 
 .page-shell { max-width: 1120px; margin: 0 auto; padding: 4rem 1.5rem 5rem; }
 
@@ -71,6 +72,21 @@ a { color: inherit; text-decoration: none; }
 .price { margin: 0; color: var(--accent) !important; font-size: 1.45rem; font-weight: 800; }
 .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; padding: 0; list-style: none; }
 .details li { padding: 0.8rem; background: #f6f7fb; border-radius: 0.55rem; }
+.new-listing-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1.5rem; margin-top: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; }
+.new-listing-form label { display: grid; gap: 0.4rem; color: var(--muted); font-size: 0.85rem; font-weight: 700; }
+.new-listing-form input, .new-listing-form select, .new-listing-form textarea { width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 0.5rem; color: var(--foreground); font: inherit; }
+.new-listing-form .full-width, .form-error { grid-column: 1 / -1; }
+.new-listing-form button { justify-self: start; padding: 0.75rem 1rem; border: 0; border-radius: 0.5rem; background: var(--accent); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+.form-error { margin: 0; color: #b42318; font-weight: 700; }
+.form-intro, .map-header > p:last-child { color: var(--muted); line-height: 1.6; }
+.map-header { max-width: 680px; margin: 1.5rem 0; }
+.map-header h1 { margin: 0.35rem 0 0.6rem; font-size: clamp(2rem, 5vw, 3.5rem); letter-spacing: -0.05em; }
+.location-map, .map-loading { min-height: 520px; border: 1px solid var(--border); border-radius: 1rem; }
+.map-loading { display: grid; place-items: center; background: var(--surface); color: var(--muted); }
+.place-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+.place-list article { padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; }
+.place-list h2 { margin: 0.45rem 0; font-size: 1.05rem; }
+.place-list p:last-child { margin: 0; color: var(--muted); }
 
 @media (max-width: 600px) {
   .navbar span { display: none; }
@@ -78,4 +94,6 @@ a { color: inherit; text-decoration: none; }
   .section-heading { align-items: start; flex-direction: column; }
   .listing-filters { grid-template-columns: 1fr; }
   .details { grid-template-columns: 1fr; }
+  .new-listing-form { grid-template-columns: 1fr; }
+  .nav-links { gap: 0.6rem; font-size: 0.8rem; }
 }
