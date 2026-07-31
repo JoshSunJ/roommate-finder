@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Listing {
+  id           Int      @id @default(autoincrement())
+  title        String
+  rent         Int
+  location     String
+  description  String
+  bedrooms     Int
+  bathroomType String
+  availableFrom String
+  postedBy     String
+  // Coordinates are optional until an address-to-map lookup is added.
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([location])
+  @@index([rent])
+}

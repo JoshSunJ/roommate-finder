@@ -21,6 +21,17 @@ Database
 
 ## Ideas and implementation plans:
 
-user Destination input(type in preference)that doens't exist yet, add later.  
+user Destination input(type in preference)that doens't exist yet, add later.
 Don’t add it yet. Keeping version one constrained to known destinations makes the next UI much easier to build and test.
 
+## Local database
+
+Listings are now stored in PostgreSQL rather than an in-memory array.
+
+1. Start Docker Desktop.
+2. Run `npm run db:up` to start the project database on port 5433.
+3. Run `npm run db:migrate -- --name <descriptive_change>` after changing the Prisma schema.
+4. Run `npm run db:seed` to reset the database to the three starter listings.
+5. Run `npm run db:studio` to inspect the records in a browser.
+
+The real connection string stays in `.env`, which Git ignores. `.env.example` documents the required local value.

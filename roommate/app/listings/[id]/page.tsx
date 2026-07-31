@@ -29,7 +29,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <li><strong>{listing.bathroomType}</strong> bathroom</li>
           <li>Available <strong>{listing.availableFrom}</strong></li>
           <li>Posted by <strong>{listing.postedBy}</strong></li>
-          <li><strong>{formatDistance(listing.coordinates, campus.coordinates)}</strong> from SJSU</li>
+          <li>
+            {listing.coordinates ? (
+              <><strong>{formatDistance(listing.coordinates, campus.coordinates)}</strong> from SJSU</>
+            ) : (
+              "Map distance will be available after the listing address is verified."
+            )}
+          </li>
         </ul>
       </article>
     </main>

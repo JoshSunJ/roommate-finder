@@ -1,12 +1,36 @@
-import { listings } from "./data";
+import prisma from "@/lib/prisma";
 import type { CreateListingInput, Listing, ListingFilters } from "./types";
 
+function toListing(record: Awaited<ReturnType<typeof prisma.listing.findFirst>>): Listing | undefined {
+  if (!record) return undefined;
+
+  return {
+    id: record.id,
+    title: record.title,
+    rent: record.rent,
+    location: record.location,
+    description: record.description,
+    bedrooms: record.bedrooms,
+    bathroomType: record.bathroomType as Listing["bathroomType"],
+    availableFrom: record.availableFrom,
+    postedBy: record.postedBy,
+    coordinates:
+      record.latitude !== null && record.longitude !== null
+        ? { latitude: record.latitude, longitude: record.longitude }
+        : undefined,
+  };
+}
+
 export async function getListings(filters: ListingFilters = {}): Promise<Listing[]> {
-  return filterListings(listings, filters);
+  const records = await prisma.listing.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  return filterListings(records.map((record) => toListing(record)!), filters);
 }
 
 export async function getListingById(id: number): Promise<Listing | undefined> {
-  return listings.find((listing) => listing.id === id);
+  return toListing(await prisma.listing.findUnique({ where: { id } }));
 }
 
 export function filterListings(listingsToFilter: Listing[], filters: ListingFilters): Listing[] {
@@ -19,12 +43,19 @@ export function filterListings(listingsToFilter: Listing[], filters: ListingFilt
 }
 
 export async function getListingLocations(): Promise<string[]> {
-  return [...new Set(listings.map((listing) => listing.location))].sort();
+  const records = await prisma.listing.findMany({
+    distinct: ["location"],
+    select: { location: true },
+    orderBy: { location: "asc" },
+  });
+
+  return records.map((record) => record.location);
 }
 
 export async function createListing(input: CreateListingInput): Promise<Listing> {
-  const listing = { ...input, id: Math.max(0, ...listings.map((item) => item.id)) + 1 };
-  // Temporary development-only storage. A server restart clears this array.
-  listings.push(listing);
-  return listing;
+  const record = await prisma.listing.create({
+    data: input,
+  });
+
+  return toListing(record)!;
 }

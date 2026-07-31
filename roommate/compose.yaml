@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: roommate
+      POSTGRES_PASSWORD: roommate_dev_password
+      POSTGRES_DB: roommate_finder
+    ports:
+      # 5432 is commonly occupied by another local PostgreSQL installation.
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roommate -d roommate_finder"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
