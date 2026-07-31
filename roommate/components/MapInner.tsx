@@ -1,21 +1,69 @@
 "use client";
 
-import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
+import { icon } from "leaflet";
+import { CircleMarker, MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import type { Place } from "@/features/places/types";
 
-type Props = { places: Place[] };
+type Props = {
+  places: Place[];
+  highlightedPlaceId: string;
+};
 
 const colors = { Campus: "#5a42d8", Company: "#e86c2d", Library: "#137a57", Groceries: "#b142a0" } as const;
 
-export default function MapInner({ places }: Props) {
+const destinationFlagIcon = icon({
+  // Files in /public are served from the site's root URL.
+  iconUrl: "/flag.png",
+  iconSize: [42, 42],
+  // The pole tip is at the bottom-right portion of this particular image.
+  iconAnchor: [31, 42],
+  popupAnchor: [0, -40],
+});
+
+export default function MapInner({ places, highlightedPlaceId }: Props) {
   return (
     <MapContainer center={[37.3352, -121.8811]} zoom={13} scrollWheelZoom className="location-map">
       <TileLayer attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {places.map((place) => (
-        <CircleMarker key={place.id} center={[place.coordinates.latitude, place.coordinates.longitude]} pathOptions={{ color: colors[place.category], fillColor: colors[place.category], fillOpacity: 0.9 }} radius={9}>
-          <Popup><strong>{place.name}</strong><br />{place.category}<br />{place.description}</Popup>
-        </CircleMarker>
-      ))}
+      {places.map((place) => {
+        const isHighlighted = place.id === highlightedPlaceId;
+        const position: [number, number] = [
+          place.coordinates.latitude,
+          place.coordinates.longitude,
+        ];
+
+        const popup = (
+          <Popup>
+            <strong>{place.name}</strong>
+            <br />
+            {place.category}
+            <br />
+            {place.description}
+          </Popup>
+        );
+
+        if (isHighlighted) {
+          return (
+            <Marker key={place.id} position={position} icon={destinationFlagIcon}>
+              {popup}
+            </Marker>
+          );
+        }
+
+        return (
+          <CircleMarker
+            key={place.id}
+            center={position}
+            pathOptions={{
+              color: colors[place.category],
+              fillColor: colors[place.category],
+              fillOpacity: 0.9,
+            }}
+            radius={9}
+          >
+            {popup}
+          </CircleMarker>
+        );
+      })}
     </MapContainer>
   );
 }
