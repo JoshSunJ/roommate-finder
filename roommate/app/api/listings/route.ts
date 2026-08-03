@@ -32,5 +32,9 @@ export async function POST(request: Request) {
 
   const currentUser = await getCurrentUser();
 
+  if (!currentUser) {
+    return Response.json({ error: "Sign in to post a listing." }, { status: 401 });
+  }
+
   return Response.json(await createListing(input, currentUser), { status: 201 });
 }

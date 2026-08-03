@@ -28,6 +28,11 @@ export async function DELETE(_request: Request, { params }: RouteProps) {
   }
 
   const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return Response.json({ error: "Sign in to manage listings." }, { status: 401 });
+  }
+
   const wasDeleted = await deleteListingForOwner(listingId, currentUser.id);
 
   if (!wasDeleted) {
