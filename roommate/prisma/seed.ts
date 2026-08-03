@@ -15,6 +15,12 @@ const prisma = new PrismaClient({
 
 async function main() {
   await prisma.listing.deleteMany();
+  const demoUser = await prisma.user.upsert({
+    where: { email: "joshua@roommate-finder.local" },
+    update: { name: "Joshua" },
+    create: { name: "Joshua", email: "joshua@roommate-finder.local" },
+  });
+
   await prisma.listing.createMany({
     data: listings.map((listing) => ({
       title: listing.title,
@@ -24,7 +30,8 @@ async function main() {
       bedrooms: listing.bedrooms,
       bathroomType: listing.bathroomType,
       availableFrom: listing.availableFrom,
-      postedBy: listing.postedBy,
+      postedBy: demoUser.name,
+      ownerId: demoUser.id,
       latitude: listing.coordinates?.latitude,
       longitude: listing.coordinates?.longitude,
     })),

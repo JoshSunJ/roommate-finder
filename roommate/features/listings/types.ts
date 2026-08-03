@@ -23,4 +23,4 @@ export interface ListingFilters {
   minBedrooms?: number;
 }
 
-export type CreateListingInput = Omit<Listing, "id" | "coordinates">;
+export type CreateListingInput = Omit<Listing, "id" | "postedBy">;

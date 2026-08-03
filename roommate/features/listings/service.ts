@@ -1,7 +1,15 @@
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
+import type { CurrentUser } from "@/lib/current-user";
 import type { CreateListingInput, Listing, ListingFilters } from "./types";
 
-function toListing(record: Awaited<ReturnType<typeof prisma.listing.findFirst>>): Listing | undefined {
+const listingWithOwner = {
+  include: { owner: true },
+} satisfies Prisma.ListingDefaultArgs;
+
+type ListingRecord = Prisma.ListingGetPayload<typeof listingWithOwner>;
+
+function toListing(record: ListingRecord | null): Listing | undefined {
   if (!record) return undefined;
 
   return {
@@ -13,7 +21,8 @@ function toListing(record: Awaited<ReturnType<typeof prisma.listing.findFirst>>)
     bedrooms: record.bedrooms,
     bathroomType: record.bathroomType as Listing["bathroomType"],
     availableFrom: record.availableFrom,
-    postedBy: record.postedBy,
+    // The relationship is now the source of truth for a listing's poster.
+    postedBy: record.owner.name,
     coordinates:
       record.latitude !== null && record.longitude !== null
         ? { latitude: record.latitude, longitude: record.longitude }
@@ -23,6 +32,7 @@ function toListing(record: Awaited<ReturnType<typeof prisma.listing.findFirst>>)
 
 export async function getListings(filters: ListingFilters = {}): Promise<Listing[]> {
   const records = await prisma.listing.findMany({
+    ...listingWithOwner,
     orderBy: { createdAt: "desc" },
   });
 
@@ -30,7 +40,20 @@ export async function getListings(filters: ListingFilters = {}): Promise<Listing
 }
 
 export async function getListingById(id: number): Promise<Listing | undefined> {
-  return toListing(await prisma.listing.findUnique({ where: { id } }));
+  return toListing(await prisma.listing.findUnique({
+    ...listingWithOwner,
+    where: { id },
+  }));
+}
+
+export async function getListingsForOwner(ownerId: number): Promise<Listing[]> {
+  const records = await prisma.listing.findMany({
+    ...listingWithOwner,
+    where: { ownerId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return records.map((record) => toListing(record)!);
 }
 
 export function filterListings(listingsToFilter: Listing[], filters: ListingFilters): Listing[] {
@@ -52,10 +75,35 @@ export async function getListingLocations(): Promise<string[]> {
   return records.map((record) => record.location);
 }
 
-export async function createListing(input: CreateListingInput): Promise<Listing> {
+export async function createListing(
+  input: CreateListingInput,
+  owner: CurrentUser,
+): Promise<Listing> {
+  const { coordinates, ...listingData } = input;
+
   const record = await prisma.listing.create({
-    data: input,
+    ...listingWithOwner,
+    data: {
+      ...listingData,
+      postedBy: owner.name,
+      owner: { connect: { id: owner.id } },
+      latitude: coordinates?.latitude,
+      longitude: coordinates?.longitude,
+    },
   });
 
   return toListing(record)!;
+}
+
+export async function deleteListingForOwner(
+  listingId: number,
+  ownerId: number,
+): Promise<boolean> {
+  // Combining id and ownerId in one database operation makes the ownership
+  // check atomic: no caller can delete another person's listing.
+  const result = await prisma.listing.deleteMany({
+    where: { id: listingId, ownerId },
+  });
+
+  return result.count === 1;
 }

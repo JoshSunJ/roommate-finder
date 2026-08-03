@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import ListingCard from "@/components/ListingCard";
+import ListingExplorerMap from "@/components/ListingExplorerMap";
 import ListingFilters from "@/components/ListingFilters";
 import {
   getListingLocations,
@@ -76,6 +77,14 @@ export default async function Home({ searchParams }: PageProps) {
           </div>
 
           <ListingFilters filters={filters} locations={locations} />
+
+          <div className="listing-explorer">
+            <div className="listing-explorer__heading">
+              <p className="eyebrow">Map view</p>
+              <p>Click a pin to open its listing.</p>
+            </div>
+            <ListingExplorerMap listings={listings} />
+          </div>
 
           <div className="listing-grid">
             {listings.map((listing) => (
