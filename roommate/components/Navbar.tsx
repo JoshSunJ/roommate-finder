@@ -8,6 +8,7 @@ export default function Navbar() {
         <span>Roommate Finder</span>
       </Link>
       <div className="nav-links">
+        <Link href="/dashboard">My listings</Link>
         <Link href="/map">Area guide</Link>
         <Link className="nav-cta" href="/listings/new">Post a listing <span aria-hidden="true">↗</span></Link>
       </div>
