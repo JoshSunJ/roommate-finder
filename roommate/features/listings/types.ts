@@ -5,6 +5,7 @@ export interface Coordinates {
 
 export interface Listing {
   id: number;
+  ownerId: number;
   title: string;
   rent: number;
   location: string;
@@ -23,4 +24,4 @@ export interface ListingFilters {
   minBedrooms?: number;
 }
 
-export type CreateListingInput = Omit<Listing, "id" | "postedBy">;
+export type CreateListingInput = Omit<Listing, "id" | "ownerId" | "postedBy">;

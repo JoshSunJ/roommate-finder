@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import InquiryForm from "@/components/InquiryForm";
 import { getListingById } from "@/features/listings/service";
 import { formatDistance, getCampus } from "@/features/places/service";
+import { getCurrentUser } from "@/lib/current-user";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -15,6 +17,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     notFound();
   }
   const campus = await getCampus();
+  const currentUser = await getCurrentUser();
 
   return (
     <main className="page-shell detail">
@@ -38,6 +41,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
           </li>
         </ul>
       </article>
+      {currentUser?.id === listing.ownerId ? (
+        <p className="owner-notice">This is your listing. Manage it from your dashboard.</p>
+      ) : currentUser ? (
+        <InquiryForm listingId={listing.id} />
+      ) : (
+        <p className="owner-notice"><Link href="/sign-in">Sign in</Link> to contact this poster.</p>
+      )}
     </main>
   );
 }

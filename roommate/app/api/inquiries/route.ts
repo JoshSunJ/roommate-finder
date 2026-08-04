@@ -1,0 +1,27 @@
+import { z } from "zod";
+
+import { createInquiry } from "@/features/inquiries/service";
+import { getCurrentUser } from "@/lib/current-user";
+
+const inquirySchema = z.object({
+  listingId: z.number().int().positive(),
+  message: z.string().trim().min(10).max(1_000),
+});
+
+export async function POST(request: Request) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return Response.json({ error: "Sign in to contact a poster." }, { status: 401 });
+
+  const parsed = inquirySchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return Response.json({ error: "Write a message between 10 and 1,000 characters." }, { status: 400 });
+  }
+
+  const result = await createInquiry(parsed.data, currentUser.id);
+  if (result.kind === "listing-not-found") return Response.json({ error: "Listing not found." }, { status: 404 });
+  if (result.kind === "own-listing") {
+    return Response.json({ error: "You cannot contact yourself about your own listing." }, { status: 403 });
+  }
+
+  return Response.json({ ok: true }, { status: 201 });
+}

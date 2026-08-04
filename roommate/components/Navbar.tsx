@@ -13,6 +13,7 @@ export default async function Navbar() {
       </Link>
       <div className="nav-links">
         {currentUser ? <Link href="/dashboard">My listings</Link> : <Link href="/sign-in">Sign in</Link>}
+        {currentUser && <Link href="/inquiries">Inbox</Link>}
         <Link href="/map">Area guide</Link>
         {currentUser ? (
           <>

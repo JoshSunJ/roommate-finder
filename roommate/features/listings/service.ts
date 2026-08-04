@@ -14,6 +14,7 @@ function toListing(record: ListingRecord | null): Listing | undefined {
 
   return {
     id: record.id,
+    ownerId: record.ownerId,
     title: record.title,
     rent: record.rent,
     location: record.location,

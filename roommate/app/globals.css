@@ -153,6 +153,22 @@ button, input, select, textarea { font: inherit; }
 .price { color: var(--lime) !important; font-size: 1.45rem; font-weight: 900; }
 .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; padding: 0; list-style: none; }
 .details li { padding: 0.85rem; border: 1px solid var(--line); border-radius: 0.7rem; color: var(--ink-muted); }
+.owner-notice { margin-top: 1rem; color: var(--ink-muted); line-height: 1.6; }
+.owner-notice a { color: var(--lime); font-weight: 800; }
+.inquiry-form { display: grid; gap: 0.8rem; margin-top: 1rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--night-soft); }
+.inquiry-form h2, .inquiry-list h2 { margin: 0; font-size: 1.35rem; letter-spacing: -0.04em; }
+.inquiry-form > p:not(.eyebrow), .inquiry-list article > p { margin: 0; color: var(--ink-muted); line-height: 1.6; }
+.inquiry-form label { display: grid; gap: 0.45rem; color: var(--ink-muted); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.inquiry-form textarea { width: 100%; min-height: 120px; padding: 0.78rem; border: 1px solid var(--line); border-radius: 0.55rem; outline: 0; background: #1b1b18; color: var(--ink); font: inherit; letter-spacing: 0; text-transform: none; resize: vertical; }
+.inquiry-form textarea:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgb(217 255 74 / 12%); }
+.inquiry-form button { justify-self: start; border: 0; border-radius: 0.55rem; padding: 0.85rem 1.1rem; background: var(--lime); color: var(--night); cursor: pointer; font-weight: 900; }
+.inquiry-form button:disabled { cursor: wait; opacity: 0.6; }
+.inquiry-success { margin-top: 1rem; color: var(--lime); font-weight: 800; }
+.inbox-page { padding-top: 4rem; }
+.inbox-page > h1 { margin: 0.65rem 0 1.1rem; font-size: clamp(2.8rem, 6vw, 5.2rem); letter-spacing: -0.075em; line-height: 0.92; }
+.inquiry-list { display: grid; gap: 0.8rem; margin-top: 2rem; }
+.inquiry-list article { display: grid; gap: 0.65rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--night-soft); }
+.inquiry-list a { justify-self: start; color: var(--lime); font-size: 0.85rem; font-weight: 800; }
 
 .form-intro, .map-header > p:last-child { max-width: 680px; color: var(--ink-muted); line-height: 1.65; }
 .new-listing-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1.25rem; margin-top: 1.7rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--night-soft); }
