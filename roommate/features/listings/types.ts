@@ -14,6 +14,7 @@ export interface Listing {
   bathroomType: "Private" | "Shared";
   availableFrom: string;
   postedBy: string;
+  status: "active" | "filled" | "expired";
   // Coordinates are derived map data, not form fields a poster must understand.
   coordinates?: Coordinates;
 }
@@ -24,4 +25,4 @@ export interface ListingFilters {
   minBedrooms?: number;
 }
 
-export type CreateListingInput = Omit<Listing, "id" | "ownerId" | "postedBy">;
+export type CreateListingInput = Omit<Listing, "id" | "ownerId" | "postedBy" | "status">;

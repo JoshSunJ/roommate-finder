@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import DeleteListingButton from "@/components/DeleteListingButton";
+import ListingStatusControl from "@/components/ListingStatusControl";
 import ListingCard from "@/components/ListingCard";
 import HousingRequestCard from "@/components/HousingRequestCard";
 import { getHousingRequestsForOwner } from "@/features/housing-requests/service";
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
             {listings.map((listing) => (
               <article key={listing.id}>
                 <ListingCard listing={listing} />
+                <ListingStatusControl listingId={listing.id} currentStatus={listing.status} />
                 <DeleteListingButton listingId={listing.id} />
               </article>
             ))}

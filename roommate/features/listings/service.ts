@@ -24,6 +24,7 @@ function toListing(record: ListingRecord | null): Listing | undefined {
     availableFrom: record.availableFrom,
     // The relationship is now the source of truth for a listing's poster.
     postedBy: record.owner.name,
+    status: record.status as Listing["status"],
     coordinates:
       record.latitude !== null && record.longitude !== null
         ? { latitude: record.latitude, longitude: record.longitude }
@@ -34,7 +35,7 @@ function toListing(record: ListingRecord | null): Listing | undefined {
 export async function getListings(filters: ListingFilters = {}): Promise<Listing[]> {
   const records = await prisma.listing.findMany({
     ...listingWithOwner,
-    orderBy: { createdAt: "desc" },
+    where: { status: "active" }, orderBy: { createdAt: "desc" },
   });
 
   return filterListings(records.map((record) => toListing(record)!), filters);
@@ -106,5 +107,10 @@ export async function deleteListingForOwner(
     where: { id: listingId, ownerId },
   });
 
+  return result.count === 1;
+}
+
+export async function updateListingStatusForOwner(listingId: number, ownerId: number, status: Listing["status"]): Promise<boolean> {
+  const result = await prisma.listing.updateMany({ where: { id: listingId, ownerId }, data: { status } });
   return result.count === 1;
 }

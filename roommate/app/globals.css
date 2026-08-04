@@ -140,6 +140,7 @@ button, input, select, textarea { font: inherit; }
 .dashboard-requests .section-heading h2 { font-size: clamp(2rem, 4vw, 3.2rem); }
 .dashboard-listings > article { display: grid; gap: 0.7rem; }
 .listing-management { display: flex; align-items: center; gap: 0.7rem; }
+.listing-management select, .listing-management button:not(.delete-listing-button) { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.65rem; background: var(--night-soft); color: var(--ink); font: inherit; font-size: 0.78rem; font-weight: 800; }
 .listing-management p { margin: 0; color: var(--coral); font-size: 0.82rem; font-weight: 700; }
 .delete-listing-button { border: 1px solid rgb(255 117 95 / 55%); border-radius: 0.55rem; background: transparent; color: var(--coral); cursor: pointer; padding: 0.7rem 0.85rem; font-size: 0.78rem; font-weight: 800; }
 .delete-listing-button:hover:not(:disabled) { background: rgb(255 117 95 / 12%); }

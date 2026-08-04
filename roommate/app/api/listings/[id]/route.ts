@@ -1,6 +1,7 @@
 import {
   deleteListingForOwner,
   getListingById,
+  updateListingStatusForOwner,
 } from "@/features/listings/service";
 import { getCurrentUser } from "@/lib/current-user";
 
@@ -41,4 +42,12 @@ export async function DELETE(_request: Request, { params }: RouteProps) {
   }
 
   return new Response(null, { status: 204 });
+}
+
+export async function PATCH(request: Request, { params }: RouteProps) {
+  const { id } = await params; const listingId = Number(id); const body = await request.json();
+  if (!Number.isInteger(listingId) || !["active", "filled", "expired"].includes(body.status)) return Response.json({ error: "Invalid listing status." }, { status: 400 });
+  const user = await getCurrentUser(); if (!user) return Response.json({ error: "Sign in to manage listings." }, { status: 401 });
+  if (!await updateListingStatusForOwner(listingId, user.id, body.status)) return Response.json({ error: "Listing not found." }, { status: 404 });
+  return Response.json({ ok: true });
 }

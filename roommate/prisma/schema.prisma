@@ -33,6 +33,7 @@ model Listing {
   bathroomType String
   availableFrom String
   postedBy     String
+  status       String   @default("active")
   ownerId      Int
   owner        User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   // Coordinates are optional until an address-to-map lookup is added.
