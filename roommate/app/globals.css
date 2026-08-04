@@ -233,6 +233,11 @@ button, input, select, textarea { font: inherit; }
 
 @keyframes float { 50% { transform: translateY(-12px) rotate(3deg); } }
 
+.review-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.review-actions button { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.65rem 0.8rem; background: transparent; color: var(--ink); cursor: pointer; font-weight: 800; }
+.review-actions button:first-child { border-color: var(--lime); color: var(--lime); }
+.review-actions .form-error { flex-basis: 100%; margin: 0; }
+
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 4.5rem; }
   .hero-orbit { width: min(68vw, 360px); }

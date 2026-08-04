@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SignOutButton from "@/components/SignOutButton";
+import { isAdmin } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/current-user";
 
 export default async function Navbar() {
@@ -15,6 +16,7 @@ export default async function Navbar() {
         {currentUser ? <Link href="/dashboard">My listings</Link> : <Link href="/sign-in">Sign in</Link>}
         {currentUser && <Link href="/inquiries">Inbox</Link>}
         {currentUser && currentUser.verificationStatus !== "verified" && <Link href="/verify">Verify account</Link>}
+        {isAdmin(currentUser) && <Link href="/admin/verifications">Reviews</Link>}
         <Link href="/requests">Housing requests</Link>
         <Link href="/map">Area guide</Link>
         {currentUser ? (
