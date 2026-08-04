@@ -1,5 +1,5 @@
 import Link from "next/link";
-import SignOutButton from "@/components/SignOutButton";
+import AccountSidebar from "@/components/AccountSidebar";
 import { isAdmin } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/current-user";
 
@@ -19,13 +19,9 @@ export default async function Navbar() {
           <Link href="/map">Area guide</Link>
         </div>
         <div className="nav-account">
-        {currentUser ? <Link href="/dashboard">Account</Link> : <Link href="/sign-in">Sign in</Link>}
-        {currentUser && <Link href="/inquiries" aria-label="Inbox">Inbox</Link>}
-        {currentUser && currentUser.verificationStatus !== "verified" && <Link href="/verify">Verify</Link>}
-        {isAdmin(currentUser) && <Link href="/admin/verifications">Reviews</Link>}
+        <AccountSidebar signedIn={Boolean(currentUser)} isAdmin={isAdmin(currentUser)} verificationStatus={currentUser?.verificationStatus} />
         {currentUser ? (
           <>
-            <SignOutButton />
             <Link className="nav-cta" href="/listings/new">Post a listing <span aria-hidden="true">↗</span></Link>
           </>
         ) : (
