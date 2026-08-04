@@ -52,14 +52,16 @@ button, input, select, textarea { font: inherit; }
   color: var(--ink);
 }
 
-.brand, .nav-links, .hero-actions, .listing-meta, .filter-actions {
+.brand, .nav-links, .nav-primary, .nav-account, .hero-actions, .listing-meta, .filter-actions {
   display: flex;
   align-items: center;
 }
 
 .brand { gap: 0.7rem; font-size: 0.92rem; font-weight: 800; letter-spacing: -0.03em; }
 .brand-mark { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--lime); color: var(--night); font-size: 0.64rem; letter-spacing: -0.08em; }
-.nav-links { gap: clamp(0.8rem, 2.5vw, 2.2rem); color: var(--ink-muted); font-size: 0.86rem; font-weight: 700; }
+.nav-links { gap: 1.25rem; color: var(--ink-muted); font-size: 0.82rem; font-weight: 700; }
+.nav-primary, .nav-account { gap: clamp(0.65rem, 1.5vw, 1.35rem); }
+.nav-account { padding-left: 1.25rem; border-left: 1px solid var(--line); }
 .nav-links > a:not(.nav-cta):hover { color: var(--ink); }
 .nav-cta { padding: 0.7rem 0.95rem; border: 1px solid var(--ink); border-radius: 999px; color: var(--night); background: var(--ink); transition: transform 180ms ease, background 180ms ease; }
 .nav-cta:hover { transform: translateY(-2px); background: var(--lime); border-color: var(--lime); }
@@ -112,12 +114,14 @@ button, input, select, textarea { font: inherit; }
 .filter-actions a { color: var(--ink-muted); font-size: 0.82rem; font-weight: 700; }
 .filter-actions a:hover { color: var(--ink); }
 
-.listing-explorer { margin: 1rem 0 1.4rem; }
+.listing-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 0.78fr); gap: 1rem; align-items: start; margin-top: 1rem; }
+.listing-results { min-width: 0; }
+.listing-explorer { position: sticky; top: 1rem; }
 .listing-explorer__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: 0 0 0.65rem; }
 .listing-explorer__heading > p:last-child { margin: 0; color: var(--ink-muted); font-size: 0.82rem; }
 .listing-explorer-map { overflow: hidden; border: 1px solid var(--line); border-radius: 1rem; }
 
-.listing-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.listing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .dashboard { padding-top: 4rem; }
 .dashboard > h1 { margin: 0.65rem 0 1.1rem; font-size: clamp(2.8rem, 6vw, 5.2rem); letter-spacing: -0.075em; line-height: 0.92; }
 .dashboard-listings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
@@ -241,6 +245,8 @@ button, input, select, textarea { font: inherit; }
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 4.5rem; }
   .hero-orbit { width: min(68vw, 360px); }
+  .listing-workspace { grid-template-columns: 1fr; }
+  .listing-explorer { position: static; order: -1; }
   .listing-grid, .housing-request-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .place-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .listing-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -252,6 +258,8 @@ button, input, select, textarea { font: inherit; }
   .navbar { padding-block: 1rem; }
   .brand > span:last-child { display: none; }
   .nav-links { gap: 0.65rem; font-size: 0.77rem; }
+  .nav-primary { display: none; }
+  .nav-account { gap: 0.55rem; padding-left: 0; border-left: 0; }
   .nav-cta { padding: 0.6rem 0.75rem; }
   .page-shell { padding-inline: 1rem; }
   .hero { padding: 3.8rem 0 3rem; }

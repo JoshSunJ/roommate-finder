@@ -20,7 +20,7 @@ export default function ListingExplorerMapInner({ listings }: Props) {
       zoom={13}
       scrollWheelZoom
       className="listing-explorer-map"
-      style={{ height: "440px" }}
+      style={{ height: "620px" }}
       aria-label="Map of available listings"
     >
       <TileLayer

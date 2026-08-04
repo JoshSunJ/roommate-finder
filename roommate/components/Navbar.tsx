@@ -13,12 +13,16 @@ export default async function Navbar() {
         <span>Roommate Finder</span>
       </Link>
       <div className="nav-links">
-        {currentUser ? <Link href="/dashboard">My listings</Link> : <Link href="/sign-in">Sign in</Link>}
-        {currentUser && <Link href="/inquiries">Inbox</Link>}
-        {currentUser && currentUser.verificationStatus !== "verified" && <Link href="/verify">Verify account</Link>}
+        <div className="nav-primary">
+          <Link href="/#listings">Explore homes</Link>
+          <Link href="/requests">Housing requests</Link>
+          <Link href="/map">Area guide</Link>
+        </div>
+        <div className="nav-account">
+        {currentUser ? <Link href="/dashboard">Account</Link> : <Link href="/sign-in">Sign in</Link>}
+        {currentUser && <Link href="/inquiries" aria-label="Inbox">Inbox</Link>}
+        {currentUser && currentUser.verificationStatus !== "verified" && <Link href="/verify">Verify</Link>}
         {isAdmin(currentUser) && <Link href="/admin/verifications">Reviews</Link>}
-        <Link href="/requests">Housing requests</Link>
-        <Link href="/map">Area guide</Link>
         {currentUser ? (
           <>
             <SignOutButton />
@@ -27,6 +31,7 @@ export default async function Navbar() {
         ) : (
           <Link className="nav-cta" href="/sign-up">Create account <span aria-hidden="true">↗</span></Link>
         )}
+        </div>
       </div>
     </nav>
   );

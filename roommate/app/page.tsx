@@ -83,18 +83,17 @@ export default async function Home({ searchParams }: PageProps) {
 
           <ListingFilters filters={filters} locations={locations} />
 
-          <div className="listing-explorer">
-            <div className="listing-explorer__heading">
-              <p className="eyebrow">Map view</p>
-              <p>Click a pin to open its listing.</p>
+          <div className="listing-workspace">
+            <div className="listing-results">
+              <div className="listing-explorer__heading"><p className="eyebrow">Results</p><p>Open a home for full details.</p></div>
+              <div className="listing-grid">
+                {listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
+              </div>
             </div>
-            <ListingExplorerMap listings={listings} />
-          </div>
-
-          <div className="listing-grid">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
+            <aside className="listing-explorer">
+              <div className="listing-explorer__heading"><p className="eyebrow">Map view</p><p>Click a pin to open its listing.</p></div>
+              <ListingExplorerMap listings={listings} />
+            </aside>
           </div>
 
           {listings.length === 0 && (
