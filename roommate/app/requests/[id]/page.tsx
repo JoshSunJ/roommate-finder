@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import HousingRequestStatusControl from "@/components/HousingRequestStatusControl";
+import LeadResponseForm from "@/components/LeadResponseForm";
+import { getLeadResponsesForRequest } from "@/features/lead-responses/service";
 import { getHousingRequestById } from "@/features/housing-requests/service";
 import { getCurrentUser } from "@/lib/current-user";
 
@@ -12,6 +14,7 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
   const request = await getHousingRequestById(Number(id));
   if (!request) notFound();
   const currentUser = await getCurrentUser();
+  const leadResponses = currentUser?.id === request.ownerId ? await getLeadResponsesForRequest(request.id) : [];
 
   return (
     <main className="page-shell detail">
@@ -30,15 +33,9 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
         </ul>
       </article>
       {currentUser?.id === request.ownerId ? (
-        <HousingRequestStatusControl
-          requestId={request.id}
-          currentStatus={request.status}
-        />
+        <><HousingRequestStatusControl requestId={request.id} currentStatus={request.status} />{leadResponses.map((lead) => <article className="inquiry-form" key={lead.id}><p className="eyebrow">Lead from {lead.sender.name}</p><p>{lead.message}</p><a href={`mailto:${lead.sender.email}`}>Reply by email ↗</a></article>)}</>
       ) : (
-        <p className="owner-notice">
-          Have a relevant room or housing lead? Direct contact for requests is the next
-          marketplace interaction we will add.
-        </p>
+        currentUser ? <LeadResponseForm housingRequestId={request.id} /> : <p className="owner-notice"><Link href="/sign-in">Sign in</Link> to share a lead.</p>
       )}
     </main>
   );

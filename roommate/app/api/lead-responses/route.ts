@@ -1,0 +1,5 @@
+import { z } from "zod";
+import { createLeadResponse } from "@/features/lead-responses/service";
+import { getCurrentUser, isVerifiedUser } from "@/lib/current-user";
+const schema = z.object({ housingRequestId: z.number().int().positive(), message: z.string().trim().min(10).max(1000) });
+export async function POST(request: Request) { const user = await getCurrentUser(); if (!user) return Response.json({error:"Sign in to share a lead."},{status:401}); if (!isVerifiedUser(user)) return Response.json({error:"Verify your affiliation before sharing a lead."},{status:403}); const input=schema.safeParse(await request.json()); if(!input.success)return Response.json({error:"Write a message between 10 and 1,000 characters."},{status:400}); const result=await createLeadResponse(input.data.housingRequestId,user.id,input.data.message); if(result==="not-found")return Response.json({error:"Housing request not found."},{status:404}); if(result==="own-request")return Response.json({error:"You cannot respond to your own request."},{status:403}); return Response.json({ok:true},{status:201}); }

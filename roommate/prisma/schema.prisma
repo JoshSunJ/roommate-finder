@@ -20,6 +20,7 @@ model User {
   listings  Listing[]
   housingRequests HousingRequest[]
   sentInquiries Inquiry[] @relation("InquirySender")
+  sentLeadResponses LeadResponse[] @relation("LeadResponseSender")
 }
 
 model Listing {
@@ -78,8 +79,21 @@ model HousingRequest {
   updatedAt         DateTime @updatedAt
 
   owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  leadResponses LeadResponse[]
 
   @@index([ownerId])
   @@index([preferredLocation])
   @@index([maxRent])
+}
+
+model LeadResponse {
+  id Int @id @default(autoincrement())
+  housingRequestId Int
+  senderId Int
+  message String
+  createdAt DateTime @default(now())
+  housingRequest HousingRequest @relation(fields: [housingRequestId], references: [id], onDelete: Cascade)
+  sender User @relation("LeadResponseSender", fields: [senderId], references: [id], onDelete: Restrict)
+  @@index([housingRequestId])
+  @@index([senderId])
 }
