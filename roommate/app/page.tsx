@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import Navbar from "@/components/Navbar";
 import ListingCard from "@/components/ListingCard";
 import ListingExplorerMap from "@/components/ListingExplorerMap";
@@ -56,6 +58,9 @@ export default async function Home({ searchParams }: PageProps) {
               <a className="button button--quiet" href="/map">
                 Explore the area <span aria-hidden="true">↗</span>
               </a>
+              <Link className="button button--quiet" href="/requests">
+                Browse requests <span aria-hidden="true">↗</span>
+              </Link>
             </div>
           </div>
           <div className="hero-orbit" aria-hidden="true">

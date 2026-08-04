@@ -14,6 +14,7 @@ model User {
   passwordHash String?
   createdAt DateTime  @default(now())
   listings  Listing[]
+  housingRequests HousingRequest[]
   sentInquiries Inquiry[] @relation("InquirySender")
 }
 
@@ -54,4 +55,27 @@ model Inquiry {
 
   @@index([listingId])
   @@index([senderId])
+}
+
+// A housing request is the seeker side of the marketplace: someone describing
+// the room they need, rather than a room they have available.
+model HousingRequest {
+  id                Int      @id @default(autoincrement())
+  ownerId           Int
+  title             String
+  maxRent           Int
+  preferredLocation String
+  description       String
+  moveInDate        String
+  moveOutDate       String
+  bedroomsNeeded    Int      @default(1)
+  status            String   @default("active")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+
+  @@index([ownerId])
+  @@index([preferredLocation])
+  @@index([maxRent])
 }
