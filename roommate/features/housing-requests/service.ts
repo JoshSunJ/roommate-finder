@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import type {
   CreateHousingRequestInput,
   HousingRequest,
+  HousingRequestStatus,
 } from "./types";
 
 const requestWithOwner = {
@@ -73,4 +74,19 @@ export async function createHousingRequest(
   });
 
   return toHousingRequest(record)!;
+}
+
+export async function updateHousingRequestStatusForOwner(
+  requestId: number,
+  ownerId: number,
+  status: HousingRequestStatus,
+): Promise<boolean> {
+  // Ownership is part of the query itself. This is safer than first fetching a
+  // request and then updating it in a separate operation.
+  const result = await prisma.housingRequest.updateMany({
+    where: { id: requestId, ownerId },
+    data: { status },
+  });
+
+  return result.count === 1;
 }

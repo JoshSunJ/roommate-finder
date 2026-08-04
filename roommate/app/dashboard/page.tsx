@@ -1,6 +1,8 @@
 import Navbar from "@/components/Navbar";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import ListingCard from "@/components/ListingCard";
+import HousingRequestCard from "@/components/HousingRequestCard";
+import { getHousingRequestsForOwner } from "@/features/housing-requests/service";
 import { getListingsForOwner } from "@/features/listings/service";
 import { getCurrentUser } from "@/lib/current-user";
 import { redirect } from "next/navigation";
@@ -12,7 +14,10 @@ export default async function DashboardPage() {
     redirect("/sign-in?next=/dashboard");
   }
 
-  const listings = await getListingsForOwner(currentUser.id);
+  const [listings, housingRequests] = await Promise.all([
+    getListingsForOwner(currentUser.id),
+    getHousingRequestsForOwner(currentUser.id),
+  ]);
 
   return (
     <>
@@ -37,6 +42,24 @@ export default async function DashboardPage() {
             ))}
           </div>
         )}
+
+        <section className="dashboard-requests" aria-labelledby="my-housing-requests">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Seeking a room</p>
+              <h2 id="my-housing-requests">My housing requests</h2>
+            </div>
+          </div>
+          {housingRequests.length === 0 ? (
+            <p className="empty-state">You have not posted a housing request yet.</p>
+          ) : (
+            <div className="housing-request-grid">
+              {housingRequests.map((request) => (
+                <HousingRequestCard key={request.id} request={request} />
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </>
   );

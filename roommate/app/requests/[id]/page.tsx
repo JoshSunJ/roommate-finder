@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import HousingRequestStatusControl from "@/components/HousingRequestStatusControl";
 import { getHousingRequestById } from "@/features/housing-requests/service";
+import { getCurrentUser } from "@/lib/current-user";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -9,6 +11,7 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
   const { id } = await params;
   const request = await getHousingRequestById(Number(id));
   if (!request) notFound();
+  const currentUser = await getCurrentUser();
 
   return (
     <main className="page-shell detail">
@@ -26,10 +29,17 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
           <li>Requested by <strong>{request.requestedBy}</strong></li>
         </ul>
       </article>
-      <p className="owner-notice">
-        Have a relevant room or housing lead? Direct contact for requests is the next
-        marketplace interaction we will add.
-      </p>
+      {currentUser?.id === request.ownerId ? (
+        <HousingRequestStatusControl
+          requestId={request.id}
+          currentStatus={request.status}
+        />
+      ) : (
+        <p className="owner-notice">
+          Have a relevant room or housing lead? Direct contact for requests is the next
+          marketplace interaction we will add.
+        </p>
+      )}
     </main>
   );
 }
