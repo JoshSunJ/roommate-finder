@@ -59,15 +59,15 @@ button, input, select, textarea { font: inherit; }
 
 .brand { gap: 0.7rem; font-size: 0.92rem; font-weight: 800; letter-spacing: -0.03em; }
 .brand-mark { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--lime); color: var(--night); font-size: 0.64rem; letter-spacing: -0.08em; }
-.nav-links { gap: 1.25rem; color: var(--ink-muted); font-size: 0.82rem; font-weight: 700; }
+.nav-links { gap: 1.25rem; margin-left: auto; color: var(--ink-muted); font-size: 0.82rem; font-weight: 700; }
 .nav-primary, .nav-account { gap: clamp(0.65rem, 1.5vw, 1.35rem); }
 .nav-account { padding-left: 1.25rem; border-left: 1px solid var(--line); }
 .account-sidebar-wrap { position: relative; }
 .account-trigger { border: 0; padding: 0; background: transparent; color: var(--ink-muted); cursor: pointer; font: inherit; font-weight: 700; }
 .account-trigger:hover { color: var(--ink); }
 .workspace-bars { margin-left: 0.25rem; font-size: 1rem; }
-.account-sidebar { position: absolute; z-index: 21; top: calc(100% + 0.9rem); right: 0; display: grid; grid-template-rows: auto 1fr auto; width: 270px; padding: 1.1rem; border: 1px solid var(--line); border-radius: 0.9rem; background: #121210; box-shadow: 0 20px 55px rgb(0 0 0 / 42%); opacity: 0; pointer-events: none; transform: translateY(-0.45rem); transition: opacity 160ms ease, transform 160ms ease; }
-.account-sidebar-wrap:hover .account-sidebar, .account-sidebar-wrap:focus-within .account-sidebar { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.account-sidebar { position: absolute; z-index: 21; top: calc(100% + 0.9rem); right: 0; display: none; grid-template-rows: auto 1fr auto; width: 270px; padding: 1.1rem; border: 1px solid var(--line); border-radius: 0.9rem; background: #121210; box-shadow: 0 20px 55px rgb(0 0 0 / 42%); }
+.account-sidebar-wrap:hover .account-sidebar, .account-sidebar-wrap:focus-within .account-sidebar { display: grid; animation: workspace-menu-in 140ms ease-out; }
 .account-sidebar__header h2 { margin: 0.45rem 0 0; font-size: 1.5rem; letter-spacing: -0.06em; }
 .account-sidebar nav { display: grid; align-content: start; gap: 0.2rem; margin-top: 1.2rem; }
 .account-sidebar nav a { padding: 0.75rem 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; font-weight: 800; }
@@ -247,6 +247,7 @@ button, input, select, textarea { font: inherit; }
 .place-list p:last-child { margin: 0; color: var(--ink-muted); font-size: 0.86rem; line-height: 1.5; }
 
 @keyframes float { 50% { transform: translateY(-12px) rotate(3deg); } }
+@keyframes workspace-menu-in { from { opacity: 0; transform: translateY(-0.4rem); } to { opacity: 1; transform: translateY(0); } }
 
 .review-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
 .review-actions button { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.65rem 0.8rem; background: transparent; color: var(--ink); cursor: pointer; font-weight: 800; }
