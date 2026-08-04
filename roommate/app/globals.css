@@ -202,8 +202,8 @@ button, input, select, textarea { font: inherit; }
 .auth-page > h1 { margin: 0.65rem 0 1.1rem; font-size: clamp(3rem, 7vw, 5.4rem); letter-spacing: -0.075em; line-height: 0.92; }
 .auth-form { display: grid; gap: 1rem; margin-top: 1.7rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--night-soft); }
 .auth-form label { display: grid; gap: 0.45rem; color: var(--ink-muted); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
-.auth-form input { width: 100%; padding: 0.78rem; border: 1px solid var(--line); border-radius: 0.55rem; outline: 0; background: #1b1b18; color: var(--ink); font-size: 0.9rem; }
-.auth-form input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgb(217 255 74 / 12%); }
+.auth-form input, .auth-form select { width: 100%; padding: 0.78rem; border: 1px solid var(--line); border-radius: 0.55rem; outline: 0; background: #1b1b18; color: var(--ink); font-size: 0.9rem; }
+.auth-form input:focus, .auth-form select:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgb(217 255 74 / 12%); }
 .auth-form button { justify-self: start; border: 0; border-radius: 0.55rem; padding: 0.85rem 1.1rem; background: var(--lime); color: var(--night); cursor: pointer; font-weight: 900; }
 .auth-form button:disabled { cursor: wait; opacity: 0.6; }
 .auth-form > p:last-child, .auth-form__hint { margin: 0; color: var(--ink-muted); font-size: 0.86rem; }

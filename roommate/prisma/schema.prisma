@@ -12,6 +12,10 @@ model User {
   name      String
   email     String    @unique
   passwordHash String?
+  affiliationType String?
+  affiliationName String?
+  verificationStatus String @default("unverified")
+  verificationSubmittedAt DateTime?
   createdAt DateTime  @default(now())
   listings  Listing[]
   housingRequests HousingRequest[]

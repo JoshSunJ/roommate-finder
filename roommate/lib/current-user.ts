@@ -5,6 +5,9 @@ export type CurrentUser = {
   id: number;
   name: string;
   email: string;
+  affiliationType: string | null;
+  affiliationName: string | null;
+  verificationStatus: "unverified" | "submitted" | "verified" | "rejected";
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -19,5 +22,20 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     where: { email },
   });
 
-  return user;
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    affiliationType: user.affiliationType,
+    affiliationName: user.affiliationName,
+    verificationStatus: user.verificationStatus as CurrentUser["verificationStatus"],
+  };
+}
+
+export function isVerifiedUser(user: CurrentUser): boolean {
+  return user.verificationStatus === "verified";
 }

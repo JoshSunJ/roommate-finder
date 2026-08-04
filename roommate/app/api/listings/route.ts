@@ -1,6 +1,6 @@
 import { createListing, getListings } from "@/features/listings/service";
 import type { CreateListingInput } from "@/features/listings/types";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentUser, isVerifiedUser } from "@/lib/current-user";
 
 export async function GET() {
   return Response.json(await getListings());
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
   if (!currentUser) {
     return Response.json({ error: "Sign in to post a listing." }, { status: 401 });
   }
+  if (!isVerifiedUser(currentUser)) return Response.json({ error: "Verify your affiliation before posting a listing." }, { status: 403 });
 
   return Response.json(await createListing(input, currentUser), { status: 201 });
 }

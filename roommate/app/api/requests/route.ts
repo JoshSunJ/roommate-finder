@@ -4,7 +4,7 @@ import {
   createHousingRequest,
   getHousingRequests,
 } from "@/features/housing-requests/service";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentUser, isVerifiedUser } from "@/lib/current-user";
 
 const createHousingRequestSchema = z.object({
   title: z.string().trim().min(5).max(120),
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
   if (!currentUser) {
     return Response.json({ error: "Sign in to post a housing request." }, { status: 401 });
   }
+  if (!isVerifiedUser(currentUser)) return Response.json({ error: "Verify your affiliation before posting a request." }, { status: 403 });
 
   const parsed = createHousingRequestSchema.safeParse(await request.json());
   if (!parsed.success) {

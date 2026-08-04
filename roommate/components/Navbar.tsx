@@ -14,6 +14,7 @@ export default async function Navbar() {
       <div className="nav-links">
         {currentUser ? <Link href="/dashboard">My listings</Link> : <Link href="/sign-in">Sign in</Link>}
         {currentUser && <Link href="/inquiries">Inbox</Link>}
+        {currentUser && currentUser.verificationStatus !== "verified" && <Link href="/verify">Verify account</Link>}
         <Link href="/requests">Housing requests</Link>
         <Link href="/map">Area guide</Link>
         {currentUser ? (

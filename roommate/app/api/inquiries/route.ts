@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createInquiry } from "@/features/inquiries/service";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentUser, isVerifiedUser } from "@/lib/current-user";
 
 const inquirySchema = z.object({
   listingId: z.number().int().positive(),
@@ -11,6 +11,7 @@ const inquirySchema = z.object({
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return Response.json({ error: "Sign in to contact a poster." }, { status: 401 });
+  if (!isVerifiedUser(currentUser)) return Response.json({ error: "Verify your affiliation before contacting a poster." }, { status: 403 });
 
   const parsed = inquirySchema.safeParse(await request.json());
   if (!parsed.success) {
