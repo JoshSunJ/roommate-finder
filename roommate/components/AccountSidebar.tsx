@@ -20,6 +20,7 @@ export default function AccountSidebar({ signedIn, isAdmin, verificationStatus }
         <Link href="/inquiries">Inbox</Link>
         {verificationStatus !== "verified" && <Link href="/verify">Verification</Link>}
         {isAdmin && <Link href="/admin/verifications">Verification reviews</Link>}
+        {isAdmin && <Link href="/admin/reports">Moderation reports</Link>}
       </nav>
       <div className="account-sidebar__footer"><SignOutButton /></div>
     </aside>

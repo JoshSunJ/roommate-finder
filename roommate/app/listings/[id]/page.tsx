@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import InquiryForm from "@/components/InquiryForm";
+import SafetyActions from "@/components/SafetyActions";
+import { hasUserBlocked, isEitherUserBlocked } from "@/features/blocks/service";
 import { getListingById } from "@/features/listings/service";
 import { formatDistance, getCampus } from "@/features/places/service";
 import { getCurrentUser } from "@/lib/current-user";
@@ -18,6 +20,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
   }
   const campus = await getCampus();
   const currentUser = await getCurrentUser();
+  const contactBlocked = currentUser && currentUser.id !== listing.ownerId ? await isEitherUserBlocked(currentUser.id, listing.ownerId) : false;
+  const ownerBlocked = currentUser && currentUser.id !== listing.ownerId ? await hasUserBlocked(currentUser.id, listing.ownerId) : false;
 
   return (
     <main className="page-shell detail">
@@ -44,7 +48,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
       {currentUser?.id === listing.ownerId ? (
         <p className="owner-notice">This is your listing. Manage it from your dashboard.</p>
       ) : currentUser ? (
-        <InquiryForm listingId={listing.id} />
+        <>{contactBlocked ? <p className="owner-notice">Contact is disabled because one account has blocked the other.</p> : <InquiryForm listingId={listing.id} />}<SafetyActions targetType="listing" targetId={listing.id} ownerId={listing.ownerId} initiallyBlocked={ownerBlocked} /></>
       ) : (
         <p className="owner-notice"><Link href="/sign-in">Sign in</Link> to contact this poster.</p>
       )}

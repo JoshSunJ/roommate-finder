@@ -23,6 +23,7 @@ export async function POST(request: Request) {
   if (result.kind === "own-listing") {
     return Response.json({ error: "You cannot contact yourself about your own listing." }, { status: 403 });
   }
+  if (result.kind === "blocked") return Response.json({ error: "Contact is unavailable because one of these accounts has blocked the other." }, { status: 403 });
 
   return Response.json({ ok: true }, { status: 201 });
 }

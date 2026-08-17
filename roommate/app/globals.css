@@ -255,6 +255,20 @@ button, input, select, textarea { font: inherit; }
 .review-actions button:first-child { border-color: var(--lime); color: var(--lime); }
 .review-actions .form-error { flex-basis: 100%; margin: 0; }
 
+.safety-actions { display: grid; gap: 0.8rem; margin-top: 1rem; padding: 1rem; border: 1px solid rgb(255 157 140 / 32%); border-radius: 1rem; background: rgb(255 157 140 / 5%); }
+.safety-actions > div { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.safety-actions button, .moderation-review button { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.7rem 0.9rem; background: transparent; color: var(--ink); cursor: pointer; font: inherit; font-size: 0.8rem; font-weight: 800; }
+.safety-actions button:hover, .moderation-review button:hover:not(:disabled) { border-color: var(--coral); color: var(--coral); }
+.safety-actions form, .moderation-review { display: grid; gap: 0.75rem; }
+.safety-actions label, .moderation-review label { display: grid; gap: 0.4rem; color: var(--ink-muted); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.safety-actions select, .safety-actions textarea, .moderation-review textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--line); border-radius: 0.55rem; outline: 0; background: #1b1b18; color: var(--ink); font: inherit; letter-spacing: 0; text-transform: none; }
+.safety-actions textarea, .moderation-review textarea { resize: vertical; }
+.safety-actions select:focus, .safety-actions textarea:focus, .moderation-review textarea:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgb(255 157 140 / 10%); }
+.safety-actions > p { margin: 0; color: var(--ink-muted); font-size: 0.84rem; }
+.moderation-review > div { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.moderation-review button:last-child { border-color: var(--coral); color: var(--coral); }
+.moderation-review button:disabled { cursor: wait; opacity: 0.55; }
+
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 4.5rem; }
   .hero-orbit { width: min(68vw, 360px); }
