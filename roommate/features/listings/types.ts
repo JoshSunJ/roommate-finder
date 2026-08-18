@@ -3,6 +3,13 @@ export interface Coordinates {
   longitude: number;
 }
 
+export interface ListingPhoto {
+  id: number;
+  url: string;
+  altText: string;
+  position: number;
+}
+
 export interface Listing {
   id: number;
   ownerId: number;
@@ -24,6 +31,7 @@ export interface Listing {
   petsAllowed: boolean;
   postedBy: string;
   status: "active" | "filled" | "expired";
+  photos: ListingPhoto[];
   // Coordinates are derived map data, not form fields a poster must understand.
   coordinates?: Coordinates;
 }
@@ -36,5 +44,5 @@ export interface ListingFilters {
 
 export type CreateListingInput = Omit<
   Listing,
-  "id" | "ownerId" | "postedBy" | "status" | "coordinates"
+  "id" | "ownerId" | "postedBy" | "status" | "photos" | "coordinates"
 > & { coordinates: Coordinates };

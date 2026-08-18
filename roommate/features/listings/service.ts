@@ -4,7 +4,7 @@ import type { CurrentUser } from "@/lib/current-user";
 import type { CreateListingInput, Listing, ListingFilters } from "./types";
 
 const listingWithOwner = {
-  include: { owner: true },
+  include: { owner: true, photos: { orderBy: { position: "asc" as const } } },
 } satisfies Prisma.ListingDefaultArgs;
 
 type ListingRecord = Prisma.ListingGetPayload<typeof listingWithOwner>;
@@ -34,6 +34,12 @@ function toListing(record: ListingRecord | null): Listing | undefined {
     // The relationship is now the source of truth for a listing's poster.
     postedBy: record.owner.name,
     status: record.status as Listing["status"],
+    photos: record.photos.map((photo) => ({
+      id: photo.id,
+      url: photo.url,
+      altText: photo.altText,
+      position: photo.position,
+    })),
     coordinates:
       record.latitude !== null && record.longitude !== null
         ? { latitude: record.latitude, longitude: record.longitude }
