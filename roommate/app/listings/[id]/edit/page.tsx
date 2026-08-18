@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import ListingForm from "@/components/ListingForm";
+import ListingPhotoManager from "@/components/ListingPhotoManager";
 import { getListingById } from "@/features/listings/service";
 import { getCurrentUser } from "@/lib/current-user";
 
@@ -22,6 +23,7 @@ export default async function EditListingPage({ params }: PageProps) {
       <h1>Edit listing</h1>
       <p className="form-intro">Changes update the existing listing; they do not create a duplicate. Only the owning account can complete this operation.</p>
       <ListingForm mode="edit" listing={listing} />
+      <ListingPhotoManager listingId={listing.id} initialPhotos={listing.photos} />
     </main>
   );
 }

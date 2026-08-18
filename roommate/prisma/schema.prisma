@@ -28,7 +28,7 @@ model User {
 }
 
 model Listing {
-  id                Int       @id @default(autoincrement())
+  id                Int            @id @default(autoincrement())
   title             String
   rent              Int
   location          String
@@ -37,28 +37,43 @@ model Listing {
   bathroomType      String
   availableFrom     String
   availableUntil    String?
-  roomType          String    @default("private")
-  leaseType         String    @default("fixed_term")
-  furnished         Boolean   @default(false)
-  utilitiesIncluded Boolean   @default(false)
+  roomType          String         @default("private")
+  leaseType         String         @default("fixed_term")
+  furnished         Boolean        @default(false)
+  utilitiesIncluded Boolean        @default(false)
   utilitiesEstimate Int?
   securityDeposit   Int?
-  parkingAvailable  Boolean   @default(false)
-  petsAllowed       Boolean   @default(false)
+  parkingAvailable  Boolean        @default(false)
+  petsAllowed       Boolean        @default(false)
   postedBy          String
-  status            String    @default("active")
+  status            String         @default("active")
   ownerId           Int
-  owner             User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  owner             User           @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   // Coordinates are optional until an address-to-map lookup is added.
   latitude          Float?
   longitude         Float?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
   inquiries         Inquiry[]
+  photos            ListingPhoto[]
 
   @@index([location])
   @@index([rent])
   @@index([ownerId])
+}
+
+model ListingPhoto {
+  id         Int      @id @default(autoincrement())
+  listingId  Int
+  url        String
+  storageKey String   @unique
+  altText    String
+  position   Int
+  createdAt  DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, position])
 }
 
 model Inquiry {

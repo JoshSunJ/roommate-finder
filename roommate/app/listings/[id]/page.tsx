@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import InquiryForm from "@/components/InquiryForm";
 import SafetyActions from "@/components/SafetyActions";
@@ -29,6 +30,15 @@ export default async function ListingDetailPage({ params }: PageProps) {
       <article className="detail-card">
         <p className="eyebrow">{listing.location}</p>
         <h1>{listing.title}</h1>
+        {listing.photos.length > 0 && (
+          <div className="listing-gallery" aria-label="Listing photos">
+            {listing.photos.map((photo, index) => (
+              <div className={index === 0 ? "listing-gallery__photo listing-gallery__photo--cover" : "listing-gallery__photo"} key={photo.id}>
+                <Image src={photo.url} alt={photo.altText} fill priority={index === 0} sizes={index === 0 ? "(max-width: 820px) 100vw, 540px" : "(max-width: 820px) 50vw, 260px"} />
+              </div>
+            ))}
+          </div>
+        )}
         <p className="price">${listing.rent}/month</p>
         <p>{listing.description}</p>
         <ul className="details">
