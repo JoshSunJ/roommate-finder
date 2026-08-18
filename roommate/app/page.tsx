@@ -1,14 +1,16 @@
 import Link from "next/link";
 
 import Navbar from "@/components/Navbar";
-import ListingCard from "@/components/ListingCard";
 import ListingExplorerMap from "@/components/ListingExplorerMap";
 import ListingFilters from "@/components/ListingFilters";
+import SaveableListingCard from "@/components/SaveableListingCard";
 import {
   getListingLocations,
   getListings,
 } from "@/features/listings/service";
 import type { ListingFilters as ListingFiltersType } from "@/features/listings/types";
+import { getSavedItemIds } from "@/features/saved-items/service";
+import { getCurrentUser } from "@/lib/current-user";
 
 type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -30,10 +32,15 @@ export default async function Home({ searchParams }: PageProps) {
     minBedrooms: toOptionalPositiveNumber(query.minBedrooms),
   };
 
-  const [listings, locations] = await Promise.all([
+  const [listings, locations, currentUser] = await Promise.all([
     getListings(filters),
     getListingLocations(),
+    getCurrentUser(),
   ]);
+  const savedListingIds = currentUser
+    ? (await getSavedItemIds(currentUser.id)).listingIds
+    : [];
+  const savedListingIdSet = new Set(savedListingIds);
 
   return (
     <>
@@ -87,12 +94,12 @@ export default async function Home({ searchParams }: PageProps) {
             <div className="listing-results">
               <div className="listing-explorer__heading"><p className="eyebrow">Results</p><p>Open a home for full details.</p></div>
               <div className="listing-grid">
-                {listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
+                {listings.map((listing) => <SaveableListingCard key={listing.id} listing={listing} isSaved={savedListingIdSet.has(listing.id)} signedIn={Boolean(currentUser)} />)}
               </div>
             </div>
             <aside className="listing-explorer">
               <div className="listing-explorer__heading"><p className="eyebrow">Map view</p><p>Click a pin to open its listing.</p></div>
-              <ListingExplorerMap listings={listings} />
+              <ListingExplorerMap listings={listings} savedListingIds={savedListingIds} />
             </aside>
           </div>
 

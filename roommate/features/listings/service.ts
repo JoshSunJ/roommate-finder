@@ -73,6 +73,19 @@ export async function getListingsForOwner(ownerId: number): Promise<Listing[]> {
   return records.map((record) => toListing(record)!);
 }
 
+export async function getListingsByIds(ids: number[]): Promise<Listing[]> {
+  if (ids.length === 0) return [];
+  const records = await prisma.listing.findMany({
+    ...listingWithOwner,
+    where: { id: { in: ids } },
+  });
+  const listingsById = new Map(records.map((record) => [record.id, toListing(record)!]));
+  return ids.flatMap((id) => {
+    const listing = listingsById.get(id);
+    return listing ? [listing] : [];
+  });
+}
+
 export function filterListings(listingsToFilter: Listing[], filters: ListingFilters): Listing[] {
   return listingsToFilter.filter((listing) => {
     const isWithinBudget = filters.maxRent === undefined || listing.rent <= filters.maxRent;

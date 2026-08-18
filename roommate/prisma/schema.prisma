@@ -8,25 +8,27 @@ datasource db {
 }
 
 model User {
-  id                      Int              @id @default(autoincrement())
+  id                      Int                   @id @default(autoincrement())
   name                    String
-  email                   String           @unique
+  email                   String                @unique
   passwordHash            String?
   affiliationType         String?
   affiliationName         String?
-  verificationStatus      String           @default("unverified")
+  verificationStatus      String                @default("unverified")
   verificationSubmittedAt DateTime?
-  createdAt               DateTime         @default(now())
+  createdAt               DateTime              @default(now())
   listings                Listing[]
   housingRequests         HousingRequest[]
-  ownedConversations      Conversation[]   @relation("ConversationOwner")
-  seekingConversations    Conversation[]   @relation("ConversationSeeker")
+  ownedConversations      Conversation[]        @relation("ConversationOwner")
+  seekingConversations    Conversation[]        @relation("ConversationSeeker")
   messages                Message[]
-  sentLeadResponses       LeadResponse[]   @relation("LeadResponseSender")
-  reportsMade             Report[]         @relation("ReportReporter")
-  reportsReviewed         Report[]         @relation("ReportReviewer")
-  blocksCreated           UserBlock[]      @relation("Blocker")
-  blocksReceived          UserBlock[]      @relation("Blocked")
+  savedListings           SavedListing[]
+  savedHousingRequests    SavedHousingRequest[]
+  sentLeadResponses       LeadResponse[]        @relation("LeadResponseSender")
+  reportsMade             Report[]              @relation("ReportReporter")
+  reportsReviewed         Report[]              @relation("ReportReviewer")
+  blocksCreated           UserBlock[]           @relation("Blocker")
+  blocksReceived          UserBlock[]           @relation("Blocked")
 }
 
 model Listing {
@@ -58,6 +60,7 @@ model Listing {
   updatedAt         DateTime       @updatedAt
   conversations     Conversation[]
   photos            ListingPhoto[]
+  savedBy           SavedListing[]
 
   @@index([location])
   @@index([rent])
@@ -76,6 +79,18 @@ model ListingPhoto {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([listingId, position])
+}
+
+model SavedListing {
+  userId    Int
+  listingId Int
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@id([userId, listingId])
+  @@index([userId, createdAt])
 }
 
 model Conversation {
@@ -127,12 +142,25 @@ model HousingRequest {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  owner         User           @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  owner         User                  @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   leadResponses LeadResponse[]
+  savedBy       SavedHousingRequest[]
 
   @@index([ownerId])
   @@index([preferredLocation])
   @@index([maxRent])
+}
+
+model SavedHousingRequest {
+  userId           Int
+  housingRequestId Int
+  createdAt        DateTime @default(now())
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  housingRequest HousingRequest @relation(fields: [housingRequestId], references: [id], onDelete: Cascade)
+
+  @@id([userId, housingRequestId])
+  @@index([userId, createdAt])
 }
 
 model LeadResponse {

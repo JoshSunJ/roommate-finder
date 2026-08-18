@@ -3,10 +3,12 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import InquiryForm from "@/components/InquiryForm";
 import SafetyActions from "@/components/SafetyActions";
+import SaveItemButton from "@/components/SaveItemButton";
 import { hasUserBlocked, isEitherUserBlocked } from "@/features/blocks/service";
 import { getListingById } from "@/features/listings/service";
 import { formatDistance, getCampus } from "@/features/places/service";
 import { getCurrentUser } from "@/lib/current-user";
+import { isItemSaved } from "@/features/saved-items/service";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -21,6 +23,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
   }
   const campus = await getCampus();
   const currentUser = await getCurrentUser();
+  const isSaved = currentUser
+    ? await isItemSaved(currentUser.id, { targetType: "listing", targetId: listing.id })
+    : false;
   const contactBlocked = currentUser && currentUser.id !== listing.ownerId ? await isEitherUserBlocked(currentUser.id, listing.ownerId) : false;
   const ownerBlocked = currentUser && currentUser.id !== listing.ownerId ? await hasUserBlocked(currentUser.id, listing.ownerId) : false;
 
@@ -28,6 +33,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     <main className="page-shell detail">
       <Link href="/" className="back-link">← All listings</Link>
       <article className="detail-card">
+        <div className="detail-save-action"><SaveItemButton targetType="listing" targetId={listing.id} initialSaved={isSaved} signedIn={Boolean(currentUser)} /></div>
         <p className="eyebrow">{listing.location}</p>
         <h1>{listing.title}</h1>
         {listing.photos.length > 0 && (

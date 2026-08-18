@@ -1,15 +1,20 @@
 import Link from "next/link";
 
-import HousingRequestCard from "@/components/HousingRequestCard";
 import Navbar from "@/components/Navbar";
+import SaveableHousingRequestCard from "@/components/SaveableHousingRequestCard";
 import { getHousingRequests } from "@/features/housing-requests/service";
 import { getCurrentUser } from "@/lib/current-user";
+import { getSavedItemIds } from "@/features/saved-items/service";
 
 export default async function HousingRequestsPage() {
   const [requests, currentUser] = await Promise.all([
     getHousingRequests(),
     getCurrentUser(),
   ]);
+  const savedRequestIds = currentUser
+    ? (await getSavedItemIds(currentUser.id)).housingRequestIds
+    : [];
+  const savedRequestIdSet = new Set(savedRequestIds);
 
   return (
     <>
@@ -35,7 +40,7 @@ export default async function HousingRequestsPage() {
           <p className="empty-state">No active housing requests yet. Be the first to post one.</p>
         ) : (
           <div className="housing-request-grid">
-            {requests.map((request) => <HousingRequestCard key={request.id} request={request} />)}
+            {requests.map((request) => <SaveableHousingRequestCard key={request.id} request={request} isSaved={savedRequestIdSet.has(request.id)} signedIn={Boolean(currentUser)} />)}
           </div>
         )}
       </main>

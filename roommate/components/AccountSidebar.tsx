@@ -18,6 +18,7 @@ export default function AccountSidebar({ signedIn, isAdmin, verificationStatus, 
       <div className="account-sidebar__header"><div><p className="eyebrow">Your workspace</p><h2>Account</h2></div></div>
       <nav>
         <Link href="/dashboard">My listings & requests</Link>
+        <Link href="/saved">Saved housing</Link>
         <Link href="/inquiries">Inbox {unreadConversationCount > 0 && <span className="nav-unread-badge">{unreadConversationCount}</span>}</Link>
         {verificationStatus !== "verified" && <Link href="/verify">Verification</Link>}
         {isAdmin && <Link href="/admin/verifications">Verification reviews</Link>}
