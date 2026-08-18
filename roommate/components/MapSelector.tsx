@@ -4,13 +4,15 @@ import { useState } from "react";
 import LocationMap from "@/components/LocationMap";
 import type { Place } from "@/features/places/types";
 import type { MapPreferences } from "@/features/preferences/types";
+import type { Listing } from "@/features/listings/types";
 
 type Props = {
   places: Place[];
   preferences: MapPreferences[];
+  savedListings: Listing[];
 };
 
-export default function MapSelector({ places, preferences }: Props) {
+export default function MapSelector({ places, preferences, savedListings }: Props) {
   // Optional chaining keeps the component safe even if mock data is empty.
   const [selectedPreferenceId, setSelectedPreferenceId] = useState(
     preferences[0]?.id ?? "",
@@ -52,6 +54,7 @@ export default function MapSelector({ places, preferences }: Props) {
       <LocationMap
         places={places}
         highlightedPlaceId={selectedPreference.primaryDestinationId}
+        savedListings={savedListings}
       />
     </section>
   );

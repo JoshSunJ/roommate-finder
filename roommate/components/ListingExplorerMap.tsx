@@ -14,12 +14,13 @@ const ListingExplorerMapInner = dynamic(
 
 type Props = {
   listings: Listing[];
+  savedListingIds: number[];
 };
 
-export default function ListingExplorerMap({ listings }: Props) {
+export default function ListingExplorerMap({ listings, savedListingIds }: Props) {
   // A listing created before map placement existed can still appear as a card,
   // but cannot truthfully be drawn as a map pin.
   const mappableListings = listings.filter((listing) => listing.coordinates);
 
-  return <ListingExplorerMapInner listings={mappableListings} />;
+  return <ListingExplorerMapInner listings={mappableListings} savedListingIds={savedListingIds} />;
 }

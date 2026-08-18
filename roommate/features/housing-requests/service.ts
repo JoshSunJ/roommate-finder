@@ -61,6 +61,19 @@ export async function getHousingRequestsForOwner(ownerId: number): Promise<Housi
   return records.map((record) => toHousingRequest(record)!);
 }
 
+export async function getHousingRequestsByIds(ids: number[]): Promise<HousingRequest[]> {
+  if (ids.length === 0) return [];
+  const records = await prisma.housingRequest.findMany({
+    ...requestWithOwner,
+    where: { id: { in: ids } },
+  });
+  const requestsById = new Map(records.map((record) => [record.id, toHousingRequest(record)!]));
+  return ids.flatMap((id) => {
+    const request = requestsById.get(id);
+    return request ? [request] : [];
+  });
+}
+
 export async function createHousingRequest(
   input: CreateHousingRequestInput,
   owner: CurrentUser,

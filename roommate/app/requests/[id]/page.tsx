@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 import HousingRequestStatusControl from "@/components/HousingRequestStatusControl";
 import LeadResponseForm from "@/components/LeadResponseForm";
 import SafetyActions from "@/components/SafetyActions";
+import SaveItemButton from "@/components/SaveItemButton";
 import { hasUserBlocked, isEitherUserBlocked } from "@/features/blocks/service";
 import { getLeadResponsesForRequest } from "@/features/lead-responses/service";
 import { getHousingRequestById } from "@/features/housing-requests/service";
 import { getCurrentUser } from "@/lib/current-user";
+import { isItemSaved } from "@/features/saved-items/service";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -16,6 +18,9 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
   const request = await getHousingRequestById(Number(id));
   if (!request) notFound();
   const currentUser = await getCurrentUser();
+  const isSaved = currentUser
+    ? await isItemSaved(currentUser.id, { targetType: "housing_request", targetId: request.id })
+    : false;
   const leadResponses = currentUser?.id === request.ownerId ? await getLeadResponsesForRequest(request.id) : [];
   const contactBlocked = currentUser && currentUser.id !== request.ownerId ? await isEitherUserBlocked(currentUser.id, request.ownerId) : false;
   const ownerBlocked = currentUser && currentUser.id !== request.ownerId ? await hasUserBlocked(currentUser.id, request.ownerId) : false;
@@ -24,6 +29,7 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
     <main className="page-shell detail">
       <Link href="/requests" className="back-link">← All housing requests</Link>
       <article className="detail-card">
+        <div className="detail-save-action"><SaveItemButton targetType="housing_request" targetId={request.id} initialSaved={isSaved} signedIn={Boolean(currentUser)} /></div>
         <p className="eyebrow">Looking for a room · {request.status}</p>
         <h1>{request.title}</h1>
         <p className="price">Up to ${request.maxRent}/month</p>
