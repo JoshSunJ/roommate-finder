@@ -1,10 +1,14 @@
 import Link from "next/link";
 import AccountSidebar from "@/components/AccountSidebar";
+import { getUnreadConversationCount } from "@/features/conversations/service";
 import { isAdmin } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/current-user";
 
 export default async function Navbar() {
   const currentUser = await getCurrentUser();
+  const unreadConversationCount = currentUser
+    ? await getUnreadConversationCount(currentUser.id)
+    : 0;
 
   return (
     <nav className="navbar">
@@ -19,7 +23,7 @@ export default async function Navbar() {
           <Link href="/map">Area guide</Link>
         </div>
         <div className="nav-account">
-        <AccountSidebar signedIn={Boolean(currentUser)} isAdmin={isAdmin(currentUser)} verificationStatus={currentUser?.verificationStatus} />
+        <AccountSidebar signedIn={Boolean(currentUser)} isAdmin={isAdmin(currentUser)} verificationStatus={currentUser?.verificationStatus} unreadConversationCount={unreadConversationCount} />
         {currentUser ? (
           <>
             <Link className="nav-cta" href="/listings/new">Post a listing <span aria-hidden="true">↗</span></Link>
