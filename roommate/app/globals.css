@@ -258,6 +258,29 @@ button, input, select, textarea { font: inherit; }
 .request-status-control button:disabled { cursor: not-allowed; opacity: 0.55; }
 .request-status-control .form-error { grid-column: 1 / -1; }
 
+.match-results { margin-top: 3rem; }
+.match-results .section-heading h2 { margin: 0.55rem 0; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.06em; line-height: 0.98; }
+.match-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+.match-card { display: grid; align-content: start; gap: 1rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--night-soft); }
+.match-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.match-card__header h3 { margin: 0.5rem 0 0; font-size: 1.35rem; letter-spacing: -0.045em; line-height: 1.05; }
+.match-score { display: grid; flex: 0 0 auto; width: 4.3rem; height: 4.3rem; place-content: center; border: 2px solid var(--line); border-radius: 50%; text-align: center; }
+.match-score strong { font-size: 1.3rem; line-height: 1; }
+.match-score span { color: var(--ink-muted); font-size: 0.65rem; }
+.match-score--strong { border-color: var(--lime); }
+.match-score--promising { border-color: var(--blue); }
+.match-score--stretch { border-color: var(--coral); }
+.match-card__summary { margin: 0; color: var(--ink-muted); font-size: 0.85rem; font-weight: 800; }
+.match-reasons { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.match-reason { display: grid; grid-template-columns: auto 1fr; gap: 0.65rem; align-items: start; }
+.match-reason > span { width: 0.65rem; height: 0.65rem; margin-top: 0.25rem; border-radius: 50%; background: var(--ink-muted); }
+.match-reason--strong > span { background: var(--lime); }
+.match-reason--tradeoff > span { background: var(--blue); }
+.match-reason--weak > span { background: var(--coral); }
+.match-reason strong { font-size: 0.78rem; }
+.match-reason p { margin: 0.18rem 0 0; color: var(--ink-muted); font-size: 0.76rem; line-height: 1.45; }
+.match-card > a { justify-self: start; color: var(--lime); font-size: 0.82rem; font-weight: 800; }
+
 .form-intro, .map-header > p:last-child { max-width: 680px; color: var(--ink-muted); line-height: 1.65; }
 .new-listing-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1.25rem; margin-top: 1.7rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--night-soft); }
 .new-listing-form label { display: grid; gap: 0.45rem; color: var(--ink-muted); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
@@ -367,7 +390,7 @@ button, input, select, textarea { font: inherit; }
   .hero h1 { font-size: clamp(3.45rem, 17vw, 5.5rem); }
   .hero-orbit { width: min(78vw, 320px); }
   .section-heading { align-items: flex-start; flex-direction: column; }
-  .listing-grid, .dashboard-listings, .housing-request-grid, .listing-filters, .new-listing-form, .place-list, .details, .map-preference-panel, .listing-options, .listing-gallery, .photo-manager__grid, .photo-upload-form { grid-template-columns: 1fr; }
+  .listing-grid, .dashboard-listings, .housing-request-grid, .listing-filters, .new-listing-form, .place-list, .details, .map-preference-panel, .listing-options, .listing-gallery, .photo-manager__grid, .photo-upload-form, .match-grid { grid-template-columns: 1fr; }
   .request-status-control { grid-template-columns: 1fr; }
   .commute-summary { grid-column: auto; }
   .filter-actions { display: grid; grid-template-columns: 1fr auto; }
