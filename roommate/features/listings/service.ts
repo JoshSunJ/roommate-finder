@@ -22,6 +22,15 @@ function toListing(record: ListingRecord | null): Listing | undefined {
     bedrooms: record.bedrooms,
     bathroomType: record.bathroomType as Listing["bathroomType"],
     availableFrom: record.availableFrom,
+    availableUntil: record.availableUntil,
+    roomType: record.roomType as Listing["roomType"],
+    leaseType: record.leaseType as Listing["leaseType"],
+    furnished: record.furnished,
+    utilitiesIncluded: record.utilitiesIncluded,
+    utilitiesEstimate: record.utilitiesEstimate,
+    securityDeposit: record.securityDeposit,
+    parkingAvailable: record.parkingAvailable,
+    petsAllowed: record.petsAllowed,
     // The relationship is now the source of truth for a listing's poster.
     postedBy: record.owner.name,
     status: record.status as Listing["status"],
@@ -95,6 +104,32 @@ export async function createListing(
   });
 
   return toListing(record)!;
+}
+
+export async function updateListingForOwner(
+  listingId: number,
+  ownerId: number,
+  input: CreateListingInput,
+): Promise<Listing | undefined> {
+  const { coordinates, ...listingData } = input;
+
+  return prisma.$transaction(async (transaction) => {
+    const result = await transaction.listing.updateMany({
+      where: { id: listingId, ownerId },
+      data: {
+        ...listingData,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      },
+    });
+
+    if (result.count !== 1) return undefined;
+
+    return toListing(await transaction.listing.findUnique({
+      ...listingWithOwner,
+      where: { id: listingId },
+    }));
+  });
 }
 
 export async function deleteListingForOwner(

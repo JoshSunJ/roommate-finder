@@ -28,24 +28,33 @@ model User {
 }
 
 model Listing {
-  id            Int       @id @default(autoincrement())
-  title         String
-  rent          Int
-  location      String
-  description   String
-  bedrooms      Int
-  bathroomType  String
-  availableFrom String
-  postedBy      String
-  status        String    @default("active")
-  ownerId       Int
-  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  id                Int       @id @default(autoincrement())
+  title             String
+  rent              Int
+  location          String
+  description       String
+  bedrooms          Int
+  bathroomType      String
+  availableFrom     String
+  availableUntil    String?
+  roomType          String    @default("private")
+  leaseType         String    @default("fixed_term")
+  furnished         Boolean   @default(false)
+  utilitiesIncluded Boolean   @default(false)
+  utilitiesEstimate Int?
+  securityDeposit   Int?
+  parkingAvailable  Boolean   @default(false)
+  petsAllowed       Boolean   @default(false)
+  postedBy          String
+  status            String    @default("active")
+  ownerId           Int
+  owner             User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   // Coordinates are optional until an address-to-map lookup is added.
-  latitude      Float?
-  longitude     Float?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  inquiries     Inquiry[]
+  latitude          Float?
+  longitude         Float?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  inquiries         Inquiry[]
 
   @@index([location])
   @@index([rent])

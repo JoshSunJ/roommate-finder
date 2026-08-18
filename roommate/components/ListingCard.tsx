@@ -9,7 +9,7 @@ export default function ListingCard({ listing }: Props) {
   return (
     <Link className="listing-card" href={`/listings/${listing.id}`}>
       <div className={`listing-visual listing-visual--${listing.id}`}>
-        <span className="listing-visual__type">Room · {listing.bathroomType.toLowerCase()} bath</span>
+        <span className="listing-visual__type">{listing.roomType.replaceAll("_", " ")} · {listing.bathroomType.toLowerCase()} bath</span>
         <span className="listing-visual__arrow" aria-hidden="true">↗</span>
         <span className="listing-visual__shape listing-visual__shape--one" />
         <span className="listing-visual__shape listing-visual__shape--two" />
@@ -22,6 +22,8 @@ export default function ListingCard({ listing }: Props) {
       <div className="listing-meta">
         <span>${listing.rent}/month</span>
         <span>{listing.bedrooms} bedrooms</span>
+        {listing.furnished && <span>Furnished</span>}
+        {listing.utilitiesIncluded && <span>Utilities included</span>}
       </div>
     </Link>
   );

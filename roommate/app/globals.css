@@ -142,6 +142,7 @@ button, input, select, textarea { font: inherit; }
 .listing-management { display: flex; align-items: center; gap: 0.7rem; }
 .listing-management select, .listing-management button:not(.delete-listing-button) { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.65rem; background: var(--night-soft); color: var(--ink); font: inherit; font-size: 0.78rem; font-weight: 800; }
 .listing-management p { margin: 0; color: var(--coral); font-size: 0.82rem; font-weight: 700; }
+.listing-edit-link { justify-self: start; color: var(--lime); font-size: 0.82rem; font-weight: 800; }
 .delete-listing-button { border: 1px solid rgb(255 117 95 / 55%); border-radius: 0.55rem; background: transparent; color: var(--coral); cursor: pointer; padding: 0.7rem 0.85rem; font-size: 0.78rem; font-weight: 800; }
 .delete-listing-button:hover:not(:disabled) { background: rgb(255 117 95 / 12%); }
 .delete-listing-button:disabled { cursor: wait; opacity: 0.6; }
@@ -213,6 +214,10 @@ button, input, select, textarea { font: inherit; }
 .new-listing-form textarea { min-height: 130px; resize: vertical; }
 .new-listing-form .full-width, .form-error { grid-column: 1 / -1; }
 .new-listing-form button { justify-self: start; padding: 0.85rem 1.1rem; }
+.listing-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 1rem; border: 1px solid var(--line); border-radius: 0.75rem; }
+.listing-options legend { padding: 0 0.4rem; color: var(--ink-muted); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.new-listing-form .listing-options label { display: flex; align-items: center; gap: 0.55rem; color: var(--ink); font-size: 0.86rem; letter-spacing: 0; text-transform: none; }
+.new-listing-form .listing-options input { width: 1rem; height: 1rem; accent-color: var(--lime); }
 .form-error { margin: 0; color: #ff9d8c; font-weight: 800; }
 .auth-page { max-width: 680px; padding-top: 2rem; }
 .auth-page > h1 { margin: 0.65rem 0 1.1rem; font-size: clamp(3rem, 7vw, 5.4rem); letter-spacing: -0.075em; line-height: 0.92; }
@@ -293,7 +298,7 @@ button, input, select, textarea { font: inherit; }
   .hero h1 { font-size: clamp(3.45rem, 17vw, 5.5rem); }
   .hero-orbit { width: min(78vw, 320px); }
   .section-heading { align-items: flex-start; flex-direction: column; }
-  .listing-grid, .dashboard-listings, .housing-request-grid, .listing-filters, .new-listing-form, .place-list, .details, .map-preference-panel { grid-template-columns: 1fr; }
+  .listing-grid, .dashboard-listings, .housing-request-grid, .listing-filters, .new-listing-form, .place-list, .details, .map-preference-panel, .listing-options { grid-template-columns: 1fr; }
   .request-status-control { grid-template-columns: 1fr; }
   .commute-summary { grid-column: auto; }
   .filter-actions { display: grid; grid-template-columns: 1fr auto; }

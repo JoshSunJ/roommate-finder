@@ -34,7 +34,14 @@ export default async function ListingDetailPage({ params }: PageProps) {
         <ul className="details">
           <li><strong>{listing.bedrooms}</strong> bedrooms in the home</li>
           <li><strong>{listing.bathroomType}</strong> bathroom</li>
-          <li>Available <strong>{listing.availableFrom}</strong></li>
+          <li>Available <strong>{listing.availableFrom}</strong>{listing.availableUntil ? <> through <strong>{listing.availableUntil}</strong></> : null}</li>
+          <li><strong>{listing.roomType.replaceAll("_", " ")}</strong></li>
+          <li><strong>{listing.leaseType.replaceAll("_", " ")}</strong> lease</li>
+          <li>{listing.furnished ? "Furnished" : "Unfurnished"}</li>
+          <li>{listing.utilitiesIncluded ? "Utilities included" : listing.utilitiesEstimate !== null ? <>Estimated utilities <strong>${listing.utilitiesEstimate}/month</strong></> : "Utilities not specified"}</li>
+          <li>{listing.securityDeposit !== null ? <>Security deposit <strong>${listing.securityDeposit}</strong></> : "Deposit not specified"}</li>
+          <li>{listing.parkingAvailable ? "Parking available" : "No parking listed"}</li>
+          <li>{listing.petsAllowed ? "Pets allowed" : "Pets not allowed"}</li>
           <li>Posted by <strong>{listing.postedBy}</strong></li>
           <li>
             {listing.coordinates ? (
@@ -46,7 +53,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         </ul>
       </article>
       {currentUser?.id === listing.ownerId ? (
-        <p className="owner-notice">This is your listing. Manage it from your dashboard.</p>
+        <p className="owner-notice">This is your listing. <Link href={`/listings/${listing.id}/edit`}>Edit its details</Link> or manage its status from your dashboard.</p>
       ) : currentUser ? (
         <>{contactBlocked ? <p className="owner-notice">Contact is disabled because one account has blocked the other.</p> : <InquiryForm listingId={listing.id} />}<SafetyActions targetType="listing" targetId={listing.id} ownerId={listing.ownerId} initiallyBlocked={ownerBlocked} /></>
       ) : (

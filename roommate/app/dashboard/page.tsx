@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Link from "next/link";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import ListingStatusControl from "@/components/ListingStatusControl";
 import ListingCard from "@/components/ListingCard";
@@ -38,6 +39,7 @@ export default async function DashboardPage() {
             {listings.map((listing) => (
               <article key={listing.id}>
                 <ListingCard listing={listing} />
+                <Link className="listing-edit-link" href={`/listings/${listing.id}/edit`}>Edit details ↗</Link>
                 <ListingStatusControl listingId={listing.id} currentStatus={listing.status} />
                 <DeleteListingButton listingId={listing.id} />
               </article>
