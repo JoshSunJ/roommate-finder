@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 export const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 export class PhotoValidationError extends Error {}
+export class PhotoStorageConfigurationError extends Error {}
 
 const extensionByType: Record<(typeof ALLOWED_PHOTO_TYPES)[number], string> = {
   "image/jpeg": "jpg",
@@ -14,6 +16,79 @@ const extensionByType: Record<(typeof ALLOWED_PHOTO_TYPES)[number], string> = {
 };
 
 const uploadDirectory = path.join(process.cwd(), "public", "uploads", "listings");
+
+type StorageDriver = "local" | "s3";
+
+type S3StorageConfig = {
+  bucket: string;
+  publicBaseUrl: string;
+};
+
+let s3Client: S3Client | undefined;
+
+function getStorageDriver(): StorageDriver {
+  const configuredDriver = process.env.PHOTO_STORAGE_DRIVER;
+  const driver = configuredDriver ?? (process.env.NODE_ENV === "production" ? "s3" : "local");
+
+  if (driver !== "local" && driver !== "s3") {
+    throw new PhotoStorageConfigurationError(
+      "PHOTO_STORAGE_DRIVER must be either local or s3.",
+    );
+  }
+  if (process.env.NODE_ENV === "production" && driver === "local") {
+    throw new PhotoStorageConfigurationError(
+      "Local photo storage is disabled in production because deployed files are not durable.",
+    );
+  }
+  return driver;
+}
+
+function requiredEnvironmentVariable(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new PhotoStorageConfigurationError(`${name} is required for S3 photo storage.`);
+  }
+  return value;
+}
+
+function getS3StorageConfig(): S3StorageConfig {
+  const publicBaseUrl = requiredEnvironmentVariable("PHOTO_PUBLIC_BASE_URL").replace(/\/$/, "");
+  const publicUrl = new URL(publicBaseUrl);
+  if (process.env.NODE_ENV === "production" && publicUrl.protocol !== "https:") {
+    throw new PhotoStorageConfigurationError(
+      "PHOTO_PUBLIC_BASE_URL must use HTTPS in production.",
+    );
+  }
+
+  return {
+    bucket: requiredEnvironmentVariable("S3_BUCKET"),
+    publicBaseUrl,
+  };
+}
+
+function getS3Client(): S3Client {
+  if (s3Client) return s3Client;
+
+  const region = requiredEnvironmentVariable("S3_REGION");
+  const endpoint = process.env.S3_ENDPOINT?.trim();
+  const accessKeyId = process.env.S3_ACCESS_KEY_ID?.trim();
+  const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY?.trim();
+
+  if (Boolean(accessKeyId) !== Boolean(secretAccessKey)) {
+    throw new PhotoStorageConfigurationError(
+      "Set both S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY, or neither when using an IAM role.",
+    );
+  }
+
+  s3Client = new S3Client({
+    region,
+    ...(endpoint ? { endpoint } : {}),
+    ...(accessKeyId && secretAccessKey
+      ? { credentials: { accessKeyId, secretAccessKey } }
+      : {}),
+  });
+  return s3Client;
+}
 
 function hasMatchingSignature(bytes: Uint8Array, type: string): boolean {
   if (type === "image/jpeg") {
@@ -43,16 +118,46 @@ export async function storeListingPhoto(file: File) {
     throw new PhotoValidationError("A file's contents do not match its image type.");
   }
 
-  const storageKey = `${randomUUID()}.${extensionByType[file.type as keyof typeof extensionByType]}`;
-  await mkdir(uploadDirectory, { recursive: true });
-  await writeFile(path.join(uploadDirectory, storageKey), bytes, { flag: "wx" });
+  const filename = `${randomUUID()}.${extensionByType[file.type as keyof typeof extensionByType]}`;
 
-  return { storageKey, url: `/uploads/listings/${storageKey}` };
+  if (getStorageDriver() === "local") {
+    await mkdir(uploadDirectory, { recursive: true });
+    await writeFile(path.join(uploadDirectory, filename), bytes, { flag: "wx" });
+    return { storageKey: filename, url: `/uploads/listings/${filename}` };
+  }
+
+  const config = getS3StorageConfig();
+  const storageKey = `listings/${filename}`;
+  await getS3Client().send(new PutObjectCommand({
+    Bucket: config.bucket,
+    Key: storageKey,
+    Body: bytes,
+    ContentType: file.type,
+    CacheControl: "public, max-age=31536000, immutable",
+  }));
+
+  return { storageKey, url: `${config.publicBaseUrl}/${storageKey}` };
 }
 
 export async function removeStoredListingPhoto(storageKey: string): Promise<void> {
-  if (path.basename(storageKey) !== storageKey || !/^[a-f0-9-]+\.(jpg|png|webp)$/.test(storageKey)) {
+  const localKeyPattern = /^[a-f0-9-]+\.(jpg|png|webp)$/;
+  const s3KeyPattern = /^listings\/[a-f0-9-]+\.(jpg|png|webp)$/;
+
+  if (!localKeyPattern.test(storageKey) && !s3KeyPattern.test(storageKey)) {
     throw new Error("Refusing to remove an invalid storage key.");
+  }
+
+  if (getStorageDriver() === "s3") {
+    const config = getS3StorageConfig();
+    await getS3Client().send(new DeleteObjectCommand({
+      Bucket: config.bucket,
+      Key: storageKey,
+    }));
+    return;
+  }
+
+  if (!localKeyPattern.test(storageKey) || path.basename(storageKey) !== storageKey) {
+    throw new Error("Refusing to remove a non-local storage key with the local driver.");
   }
 
   try {

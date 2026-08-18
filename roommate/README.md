@@ -35,3 +35,30 @@ Listings are now stored in PostgreSQL rather than an in-memory array.
 5. Run `npm run db:studio` to inspect the records in a browser.
 
 The real connection string stays in `.env`, which Git ignores. `.env.example` documents the required local value.
+
+## Photo storage
+
+Local development uses `PHOTO_STORAGE_DRIVER=local` and writes listing photos
+under `public/uploads/listings`. This is deliberately blocked when
+`NODE_ENV=production`, because files written to a deployed application instance
+can disappear during scaling or redeployment.
+
+Production uses the S3-compatible driver. Cloudflare R2 is the recommended
+provider for this project, while the same adapter also works with AWS S3 or
+another compatible object store.
+
+Required production variables:
+
+```text
+PHOTO_STORAGE_DRIVER=s3
+S3_BUCKET
+S3_REGION
+S3_ENDPOINT            # required by R2; optional with AWS S3
+S3_ACCESS_KEY_ID       # omit with an AWS IAM role
+S3_SECRET_ACCESS_KEY   # omit with an AWS IAM role
+PHOTO_PUBLIC_BASE_URL
+```
+
+The bucket must permit public reads through `PHOTO_PUBLIC_BASE_URL`, but write
+credentials remain server-only. Never prefix storage credentials with
+`NEXT_PUBLIC_`.
