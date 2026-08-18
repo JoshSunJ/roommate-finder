@@ -20,6 +20,9 @@ function photoRemotePatterns(): NonNullable<NextConfig["images"]>["remotePattern
 }
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: process.cwd(),
+  },
   images: {
     remotePatterns: photoRemotePatterns(),
     maximumRedirects: 0,

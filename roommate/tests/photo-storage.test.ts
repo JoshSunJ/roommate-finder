@@ -41,7 +41,7 @@ test("the local development adapter stores and removes a valid image", async () 
 test("production fails closed instead of silently using ephemeral local storage", async () => {
   const originalNodeEnvironment = process.env.NODE_ENV;
   const originalDriver = process.env.PHOTO_STORAGE_DRIVER;
-  process.env.NODE_ENV = "production";
+  Reflect.set(process.env, "NODE_ENV", "production");
   process.env.PHOTO_STORAGE_DRIVER = "local";
 
   try {
@@ -54,8 +54,8 @@ test("production fails closed instead of silently using ephemeral local storage"
         /disabled in production/.test(error.message),
     );
   } finally {
-    if (originalNodeEnvironment === undefined) delete process.env.NODE_ENV;
-    else process.env.NODE_ENV = originalNodeEnvironment;
+    if (originalNodeEnvironment === undefined) Reflect.deleteProperty(process.env, "NODE_ENV");
+    else Reflect.set(process.env, "NODE_ENV", originalNodeEnvironment);
     if (originalDriver === undefined) delete process.env.PHOTO_STORAGE_DRIVER;
     else process.env.PHOTO_STORAGE_DRIVER = originalDriver;
   }
