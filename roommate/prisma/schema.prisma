@@ -19,7 +19,9 @@ model User {
   createdAt               DateTime         @default(now())
   listings                Listing[]
   housingRequests         HousingRequest[]
-  sentInquiries           Inquiry[]        @relation("InquirySender")
+  ownedConversations      Conversation[]   @relation("ConversationOwner")
+  seekingConversations    Conversation[]   @relation("ConversationSeeker")
+  messages                Message[]
   sentLeadResponses       LeadResponse[]   @relation("LeadResponseSender")
   reportsMade             Report[]         @relation("ReportReporter")
   reportsReviewed         Report[]         @relation("ReportReviewer")
@@ -54,7 +56,7 @@ model Listing {
   longitude         Float?
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
-  inquiries         Inquiry[]
+  conversations     Conversation[]
   photos            ListingPhoto[]
 
   @@index([location])
@@ -76,18 +78,36 @@ model ListingPhoto {
   @@index([listingId, position])
 }
 
-model Inquiry {
+model Conversation {
   id        Int      @id @default(autoincrement())
   listingId Int
-  senderId  Int
-  message   String
-  status    String   @default("new")
+  ownerId   Int
+  seekerId  Int
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  sender  User    @relation("InquirySender", fields: [senderId], references: [id], onDelete: Restrict)
+  listing  Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  owner    User      @relation("ConversationOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  seeker   User      @relation("ConversationSeeker", fields: [seekerId], references: [id], onDelete: Restrict)
+  messages Message[]
 
-  @@index([listingId])
+  @@unique([listingId, seekerId])
+  @@index([ownerId, updatedAt])
+  @@index([seekerId, updatedAt])
+}
+
+model Message {
+  id             Int       @id @default(autoincrement())
+  conversationId Int
+  senderId       Int
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([conversationId, createdAt])
   @@index([senderId])
 }
 

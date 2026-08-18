@@ -1,37 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Props = { listingId: number };
 
 export default function InquiryForm({ listingId }: Props) {
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSent, setIsSent] = useState(false);
 
   async function submitInquiry() {
     setError("");
     setIsSubmitting(true);
-    const response = await fetch("/api/inquiries", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ listingId, message }),
-    });
+    try {
+      const response = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId, message }),
+      });
 
-    if (!response.ok) {
-      setError((await response.json()).error ?? "Could not send your inquiry.");
+      if (!response.ok) {
+        setError((await response.json()).error ?? "Could not start the conversation.");
+        return;
+      }
+
+      const result = await response.json() as { conversationId: number };
+      router.push(`/inquiries/${result.conversationId}`);
+    } catch {
+      setError("Could not reach the server. Try again.");
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    setIsSent(true);
-    setMessage("");
-    setIsSubmitting(false);
-  }
-
-  if (isSent) {
-    return <p className="inquiry-success">Inquiry sent. The poster can now see it in their inbox.</p>;
   }
 
   return (
@@ -52,7 +53,7 @@ export default function InquiryForm({ listingId }: Props) {
       </label>
       {error && <p className="form-error">{error}</p>}
       <button type="button" onClick={submitInquiry} disabled={isSubmitting}>
-        {isSubmitting ? "Sending…" : "Send inquiry"}
+        {isSubmitting ? "Opening conversation…" : "Start conversation"}
       </button>
     </section>
   );

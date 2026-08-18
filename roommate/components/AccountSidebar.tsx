@@ -6,9 +6,10 @@ type Props = {
   signedIn: boolean;
   isAdmin: boolean;
   verificationStatus?: "unverified" | "submitted" | "verified" | "rejected";
+  unreadConversationCount: number;
 };
 
-export default function AccountSidebar({ signedIn, isAdmin, verificationStatus }: Props) {
+export default function AccountSidebar({ signedIn, isAdmin, verificationStatus, unreadConversationCount }: Props) {
   if (!signedIn) return <Link href="/sign-in" className="account-trigger">Sign in</Link>;
 
   return <div className="account-sidebar-wrap">
@@ -17,7 +18,7 @@ export default function AccountSidebar({ signedIn, isAdmin, verificationStatus }
       <div className="account-sidebar__header"><div><p className="eyebrow">Your workspace</p><h2>Account</h2></div></div>
       <nav>
         <Link href="/dashboard">My listings & requests</Link>
-        <Link href="/inquiries">Inbox</Link>
+        <Link href="/inquiries">Inbox {unreadConversationCount > 0 && <span className="nav-unread-badge">{unreadConversationCount}</span>}</Link>
         {verificationStatus !== "verified" && <Link href="/verify">Verification</Link>}
         {isAdmin && <Link href="/admin/verifications">Verification reviews</Link>}
         {isAdmin && <Link href="/admin/reports">Moderation reports</Link>}
