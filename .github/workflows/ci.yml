@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    defaults:
+      run:
+        working-directory: roommate
+
     env:
       DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/roommate_ci
       AUTH_SECRET: ci-only-secret-not-used-in-production
@@ -32,6 +36,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: roommate/package-lock.json
 
       - name: Install locked dependencies
         run: npm ci
