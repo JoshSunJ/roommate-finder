@@ -52,15 +52,15 @@ export default async function Home({ searchParams }: PageProps) {
       <main className="page-shell">
         <section className="hero hero--home">
           <div className="hero-copy">
-            <p className="eyebrow">San Jose · housing, mapped</p>
+            <p className="eyebrow">For university students and interns</p>
             <h1>
-              Live closer.
+              Find your place.
               <br />
-              <span>Move smarter.</span>
+              <span>Know your route.</span>
             </h1>
             <p>
-              Find a room that works with your commute, your budget, and the
-              places that make a new city feel like home.
+              Search housing around the school, company, commute, and everyday
+              places that will shape your next move.
             </p>
             <div className="hero-actions">
               <a className="button button--primary" href="#listings">
@@ -74,12 +74,17 @@ export default async function Home({ searchParams }: PageProps) {
               </Link>
             </div>
           </div>
-          <div className="hero-orbit" aria-hidden="true">
-            <span className="orbit-label orbit-label--top">CITY GUIDE</span>
-            <span className="orbit-label orbit-label--bottom">YOUR NEXT MOVE</span>
-            <span className="orbit-core">RF</span>
-            <span className="orbit-dot orbit-dot--one" />
-            <span className="orbit-dot orbit-dot--two" />
+          <div className="hero-city" aria-hidden="true">
+            <div className="hero-city__sun" />
+            <div className="hero-city__route hero-city__route--one" />
+            <div className="hero-city__route hero-city__route--two" />
+            <span className="hero-city__stop hero-city__stop--one">01</span>
+            <span className="hero-city__stop hero-city__stop--two">02</span>
+            <span className="hero-city__stop hero-city__stop--three">03</span>
+            <div className="hero-city__buildings">
+              <i /><i /><i /><i /><i />
+            </div>
+            <p>school → home → work</p>
           </div>
         </section>
 

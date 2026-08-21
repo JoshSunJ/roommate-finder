@@ -12,9 +12,9 @@ export default async function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link href="/" className="brand" aria-label="Roommate Finder home">
-        <span className="brand-mark">RF</span>
-        <span>Roommate Finder</span>
+      <Link href="/" className="brand" aria-label="unitern home">
+        <span className="brand-mark" aria-hidden="true">u</span>
+        <span>unitern</span>
       </Link>
       <div className="nav-links">
         <div className="nav-primary">
