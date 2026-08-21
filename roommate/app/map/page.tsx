@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import MapSelector from "@/components/MapSelector";
-import { preferences } from "@/features/preferences/data";
 import { getPlaces } from "@/features/places/service";
 import { getSavedItemIds } from "@/features/saved-items/service";
 import { getListingsByIds } from "@/features/listings/service";
@@ -20,7 +19,7 @@ export default async function MapPage() {
           <h1>Build a life around the right place.</h1>
           <p>Start with a student or intern routine, then compare saved homes with the places you need every day.</p>
         </header>
-        <MapSelector places={places} preferences={preferences} savedListings={savedListings} />
+        <MapSelector places={places} savedListings={savedListings} />
       </main>
     </>
   );
