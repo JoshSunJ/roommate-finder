@@ -1,9 +1,8 @@
 import Link from "next/link";
 
 import Navbar from "@/components/Navbar";
-import ListingExplorerMap from "@/components/ListingExplorerMap";
 import ListingFilters from "@/components/ListingFilters";
-import SaveableListingCard from "@/components/SaveableListingCard";
+import ListingWorkspace from "@/components/ListingWorkspace";
 import {
   getListingLocations,
   getListings,
@@ -40,7 +39,12 @@ export default async function Home({ searchParams }: PageProps) {
   const savedListingIds = currentUser
     ? (await getSavedItemIds(currentUser.id)).listingIds
     : [];
-  const savedListingIdSet = new Set(savedListingIds);
+  const requestedListingId = toOptionalPositiveNumber(query.listing);
+  const initialSelectedListingId = listings.some(
+    (listing) => listing.id === requestedListingId && listing.coordinates,
+  )
+    ? requestedListingId
+    : undefined;
 
   return (
     <>
@@ -90,18 +94,12 @@ export default async function Home({ searchParams }: PageProps) {
 
           <ListingFilters filters={filters} locations={locations} />
 
-          <div className="listing-workspace">
-            <div className="listing-results">
-              <div className="listing-explorer__heading"><p className="eyebrow">Results</p><p>Open a home for full details.</p></div>
-              <div className="listing-grid">
-                {listings.map((listing) => <SaveableListingCard key={listing.id} listing={listing} isSaved={savedListingIdSet.has(listing.id)} signedIn={Boolean(currentUser)} />)}
-              </div>
-            </div>
-            <aside className="listing-explorer">
-              <div className="listing-explorer__heading"><p className="eyebrow">Map view</p><p>Click a pin to open its listing.</p></div>
-              <ListingExplorerMap listings={listings} savedListingIds={savedListingIds} />
-            </aside>
-          </div>
+          <ListingWorkspace
+            listings={listings}
+            savedListingIds={savedListingIds}
+            signedIn={Boolean(currentUser)}
+            initialSelectedListingId={initialSelectedListingId}
+          />
 
           {listings.length === 0 && (
             <p className="empty-state">No listings match those filters. Try clearing one.</p>

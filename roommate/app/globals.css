@@ -127,6 +127,7 @@ button, input, select, textarea { font: inherit; }
 .filter-actions a:hover { color: var(--ink); }
 
 .listing-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 0.78fr); gap: 1rem; align-items: start; margin-top: 1rem; }
+.listing-workspace-toggle { display: none; }
 .listing-results { min-width: 0; }
 .listing-explorer { position: sticky; top: 1rem; }
 .listing-explorer__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: 0 0 0.65rem; }
@@ -139,6 +140,7 @@ button, input, select, textarea { font: inherit; }
 .housing-map-marker { border: 3px solid var(--night); border-radius: 999px; padding: 0.42rem 0.58rem; background: var(--lime); color: var(--night); cursor: pointer; box-shadow: 0 7px 18px rgb(0 0 0 / 38%); font: inherit; font-size: 0.7rem; font-weight: 950; transition: transform 160ms ease; }
 .housing-map-marker:hover, .housing-map-marker:focus-visible { z-index: 2; transform: translateY(-3px) scale(1.06); outline: 2px solid var(--ink); outline-offset: 2px; }
 .housing-map-marker--saved { min-width: 2.25rem; min-height: 2.25rem; padding: 0.35rem; background: var(--coral); font-size: 0.92rem; }
+.housing-map-marker--selected { z-index: 3; transform: translateY(-4px) scale(1.16); outline: 3px solid var(--blue); outline-offset: 3px; }
 .housing-map-popup { display: grid; gap: 0.38rem; padding: 1rem; }
 .housing-map-popup p, .housing-map-popup h3, .housing-map-popup span, .housing-map-popup strong { margin: 0; }
 .housing-map-popup p { color: var(--lime); font-size: 0.64rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -155,6 +157,7 @@ button, input, select, textarea { font: inherit; }
 
 .listing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .saveable-card { position: relative; min-width: 0; }
+.saveable-card--selected > .listing-card { border-color: var(--blue); box-shadow: 0 0 0 2px rgb(147 169 251 / 24%), 0 20px 55px rgb(0 0 0 / 28%); transform: translateY(-4px); }
 .saveable-card > .listing-card, .saveable-card > .housing-request-card { height: 100%; }
 .save-item-control { position: absolute; z-index: 4; top: 0.75rem; right: 0.75rem; display: grid; justify-items: end; gap: 0.35rem; }
 .saveable-card .listing-visual__arrow { display: none; }
@@ -163,6 +166,8 @@ button, input, select, textarea { font: inherit; }
 .save-item-button--saved { border-color: var(--coral); background: var(--coral); color: var(--night); }
 .save-item-button:disabled { cursor: wait; opacity: 0.65; }
 .save-item-error { max-width: 210px; padding: 0.35rem 0.5rem; border-radius: 0.4rem; background: var(--night); color: var(--coral); font-size: 0.68rem; line-height: 1.35; }
+.show-on-map-button { position: absolute; z-index: 4; top: 3.7rem; right: 0.75rem; border: 1px solid rgb(246 244 238 / 42%); border-radius: 999px; padding: 0.45rem 0.65rem; background: rgb(9 9 9 / 82%); color: var(--ink); cursor: pointer; font: inherit; font-size: 0.7rem; font-weight: 900; backdrop-filter: blur(10px); transition: transform 160ms ease, border-color 160ms ease; }
+.show-on-map-button:hover, .show-on-map-button:focus-visible { border-color: var(--blue); transform: translateY(-2px); outline: none; }
 .saved-home-marker { display: grid !important; place-items: center; border: 2px solid var(--night); border-radius: 50%; background: var(--ink); box-shadow: 0 5px 14px rgb(0 0 0 / 38%); font-size: 1.25rem; }
 .dashboard { padding-top: 4rem; }
 .dashboard > h1 { margin: 0.65rem 0 1.1rem; font-size: clamp(2.8rem, 6vw, 5.2rem); letter-spacing: -0.075em; line-height: 0.92; }
@@ -410,6 +415,13 @@ button, input, select, textarea { font: inherit; }
   .hero h1 { font-size: clamp(3.45rem, 17vw, 5.5rem); }
   .hero-orbit { width: min(78vw, 320px); }
   .section-heading { align-items: flex-start; flex-direction: column; }
+  .listing-workspace-toggle { position: sticky; z-index: 5; top: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; margin: 1rem 0; border: 1px solid var(--line); border-radius: 999px; padding: 0.3rem; background: rgb(9 9 9 / 90%); backdrop-filter: blur(14px); }
+  .listing-workspace-toggle button { border: 0; border-radius: 999px; padding: 0.65rem; background: transparent; color: var(--ink-muted); cursor: pointer; font: inherit; font-size: 0.78rem; font-weight: 900; }
+  .listing-workspace-toggle button.is-active { background: var(--lime); color: var(--night); }
+  .listing-workspace[data-mobile-view="list"] .listing-explorer { display: none; }
+  .listing-workspace[data-mobile-view="map"] .listing-results { display: none; }
+  .listing-workspace[data-mobile-view="map"] .listing-explorer { display: block; }
+  .housing-map-shell { height: min(70vh, 620px); }
   .listing-grid, .dashboard-listings, .housing-request-grid, .listing-filters, .new-listing-form, .place-list, .details, .map-preference-panel, .listing-options, .listing-gallery, .photo-manager__grid, .photo-upload-form, .match-grid { grid-template-columns: 1fr; }
   .request-status-control { grid-template-columns: 1fr; }
   .commute-summary { grid-column: auto; }
