@@ -20,5 +20,10 @@ const developmentRasterStyle: StyleSpecification = {
 
 // NEXT_PUBLIC_ is intentional: the browser must know which public map style
 // to request. Never put a secret provider credential in this value.
+const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY?.trim();
+
 export const mapStyle: string | StyleSpecification =
-  process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim() || developmentRasterStyle;
+  process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim() ||
+  (mapTilerKey
+    ? `https://api.maptiler.com/maps/streets-v4/style.json?key=${mapTilerKey}`
+    : developmentRasterStyle);

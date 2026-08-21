@@ -11,13 +11,14 @@ import Map, {
 } from "react-map-gl/maplibre";
 
 import { mapStyle } from "@/features/map/config";
-import type { Listing } from "@/features/listings/types";
+import type { Coordinates, Listing } from "@/features/listings/types";
 import type { Place } from "@/features/places/types";
 
 type Props = {
   places: Place[];
   highlightedPlaceId: string;
   savedListings: Listing[];
+  focusCoordinates: Coordinates;
 };
 
 type SelectedMarker =
@@ -29,6 +30,7 @@ export default function MapInner({
   places,
   highlightedPlaceId,
   savedListings,
+  focusCoordinates,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [selectedMarker, setSelectedMarker] = useState<SelectedMarker>(null);
@@ -44,22 +46,22 @@ export default function MapInner({
     : undefined;
 
   useEffect(() => {
-    if (!highlightedPlace) return;
+    const target = highlightedPlace?.coordinates ?? focusCoordinates;
     mapRef.current?.flyTo({
       center: [
-        highlightedPlace.coordinates.longitude,
-        highlightedPlace.coordinates.latitude,
+        target.longitude,
+        target.latitude,
       ],
-      zoom: 13.5,
+      zoom: highlightedPlace ? 13.5 : 10.5,
       duration: 800,
     });
-  }, [highlightedPlace]);
+  }, [focusCoordinates, highlightedPlace]);
 
   return (
     <div className="location-map">
       <Map
         ref={mapRef}
-        initialViewState={{ longitude: -121.8811, latitude: 37.3352, zoom: 12.5 }}
+        initialViewState={{ longitude: focusCoordinates.longitude, latitude: focusCoordinates.latitude, zoom: 12.5 }}
         mapStyle={mapStyle}
         reuseMaps
         onClick={() => setSelectedMarker(null)}
