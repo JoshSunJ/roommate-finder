@@ -3,32 +3,37 @@
 import { useMemo, useState } from "react";
 import LocationMap from "@/components/LocationMap";
 import type { Place } from "@/features/places/types";
-import type { MapPreferences } from "@/features/preferences/types";
+import type { CommuteMode } from "@/features/preferences/types";
 import type { Listing } from "@/features/listings/types";
 
 type Props = {
   places: Place[];
-  preferences: MapPreferences[];
   savedListings: Listing[];
 };
 
-export default function MapSelector({ places, preferences, savedListings }: Props) {
+const commuteModes: CommuteMode[] = ["transit", "drive", "bike", "walk", "ride share"];
+
+export default function MapSelector({ places, savedListings }: Props) {
   const [audience, setAudience] = useState<"student" | "intern">("student");
-  const [selectedPreferenceId, setSelectedPreferenceId] = useState(
-    preferences[0]?.id ?? "",
+  const [selectedDestinationId, setSelectedDestinationId] = useState(
+    places.find((place) => place.category === "Campus")?.id ?? places[0]?.id ?? "",
+  );
+  const [selectedModes, setSelectedModes] = useState<CommuteMode[]>(["transit", "bike"]);
+  const [maxCommuteMinutes, setMaxCommuteMinutes] = useState(30);
+
+  const destinationOptions = useMemo(
+    () => places.filter((place) =>
+      audience === "student" ? place.category === "Campus" : place.category === "Company",
+    ),
+    [audience, places],
   );
 
-  const audiencePreferences = useMemo(
-    () => preferences.filter((preference) => preference.id.includes(audience)),
-    [audience, preferences],
-  );
-
-  const selectedPreference = preferences.find(
-    (preference) => preference.id === selectedPreferenceId,
-  );
-
-  if (!selectedPreference) {
-    return <p className="empty-state">No commute profiles are available yet.</p>;
+  function toggleMode(mode: CommuteMode) {
+    setSelectedModes((current) =>
+      current.includes(mode)
+        ? current.length > 1 ? current.filter((item) => item !== mode) : current
+        : [...current, mode],
+    );
   }
 
   return (
@@ -48,10 +53,13 @@ export default function MapSelector({ places, preferences, savedListings }: Prop
               aria-pressed={audience === option}
               onClick={() => {
                 setAudience(option);
-                const nextPreference = preferences.find((preference) =>
-                  preference.id.includes(option),
+                const nextDestination = places.find((place) =>
+                  option === "student"
+                    ? place.category === "Campus"
+                    : place.category === "Company",
                 );
-                if (nextPreference) setSelectedPreferenceId(nextPreference.id);
+                if (nextDestination) setSelectedDestinationId(nextDestination.id);
+                setSelectedModes(option === "student" ? ["transit", "bike"] : ["transit", "drive"]);
               }}
             >
               {option === "student" ? "University student" : "Company intern"}
@@ -63,22 +71,52 @@ export default function MapSelector({ places, preferences, savedListings }: Prop
           Destination
           <select
             id="commute-profile"
-            value={selectedPreferenceId}
-            onChange={(event) => setSelectedPreferenceId(event.target.value)}
+            value={selectedDestinationId}
+            onChange={(event) => setSelectedDestinationId(event.target.value)}
           >
-            {audiencePreferences.map((preference) => (
-              <option key={preference.id} value={preference.id}>
-                {preference.label}
+            {destinationOptions.map((place) => (
+              <option key={place.id} value={place.id}>
+                {place.name}
               </option>
             ))}
           </select>
         </label>
 
+        <fieldset className="commute-mode-picker">
+          <legend>How would you travel?</legend>
+          <div>
+            {commuteModes.map((mode) => (
+              <button
+                type="button"
+                key={mode}
+                className={selectedModes.includes(mode) ? "is-active" : ""}
+                aria-pressed={selectedModes.includes(mode)}
+                onClick={() => toggleMode(mode)}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <label className="commute-limit" htmlFor="commute-limit">
+          <span>Maximum commute <strong>{maxCommuteMinutes} min</strong></span>
+          <input
+            id="commute-limit"
+            type="range"
+            min="10"
+            max="90"
+            step="5"
+            value={maxCommuteMinutes}
+            onChange={(event) => setMaxCommuteMinutes(Number(event.target.value))}
+          />
+        </label>
+
         <div className="commute-summary">
+          <span>Routine</span>
+          <strong>{audience}</strong>
           <span>Preferred</span>
-          <strong>{selectedPreference.preferredTravelModes.join(" + ")}</strong>
-          <span>Commute goal</span>
-          <strong>≤ {selectedPreference.maxCommuteMinutes} min</strong>
+          <strong>{selectedModes.join(" + ")}</strong>
         </div>
 
         <div className="area-place-list" aria-label="Places in this area">
@@ -87,7 +125,7 @@ export default function MapSelector({ places, preferences, savedListings }: Prop
             <span>{places.length} places</span>
           </div>
           {places.map((place) => (
-            <article key={place.id} className={place.id === selectedPreference.primaryDestinationId ? "is-highlighted" : ""}>
+            <article key={place.id} className={place.id === selectedDestinationId ? "is-highlighted" : ""}>
               <i aria-hidden="true">{place.category.slice(0, 1)}</i>
               <div><strong>{place.name}</strong><span>{place.category} · {place.description}</span></div>
             </article>
@@ -97,7 +135,7 @@ export default function MapSelector({ places, preferences, savedListings }: Prop
 
       <LocationMap
         places={places}
-        highlightedPlaceId={selectedPreference.primaryDestinationId}
+        highlightedPlaceId={selectedDestinationId}
         savedListings={savedListings}
       />
     </section>
