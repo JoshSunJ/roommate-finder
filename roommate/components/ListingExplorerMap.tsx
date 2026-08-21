@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import type { Listing } from "@/features/listings/types";
 
 const ListingExplorerMapInner = dynamic(
-  () => import("./ListingExplorerMapInner"),
+  () => import("@/features/map/components/HousingMap"),
   {
     ssr: false,
     loading: () => <div className="map-loading">Loading listing map…</div>,
