@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 
+import CommuteComparison from "@/components/CommuteComparison";
 import LocationMap from "@/components/LocationMap";
 import LocationSearch from "@/components/LocationSearch";
+import { compareCommuteModes } from "@/features/commute/service";
 import type { Listing } from "@/features/listings/types";
 import {
   defaultCity,
@@ -66,6 +68,21 @@ export default function MapSelector({ places, savedListings, city }: Props) {
   const visibleSavedListings = useMemo(
     () => savedListings.filter((listing) => isInCityArea(listing.coordinates, city)),
     [city, savedListings],
+  );
+  const [selectedHomeId, setSelectedHomeId] = useState<number | null>(
+    visibleSavedListings[0]?.id ?? null,
+  );
+  const selectedHome = visibleSavedListings.find((listing) => listing.id === selectedHomeId) ?? null;
+  const commuteEstimates = useMemo(
+    () => selectedHome?.coordinates && selectedDestination
+      ? compareCommuteModes(
+        selectedHome.coordinates,
+        selectedDestination.coordinates,
+        selectedModes,
+        maxCommuteMinutes,
+      )
+      : [],
+    [maxCommuteMinutes, selectedDestination, selectedHome, selectedModes],
   );
 
   function toggleMode(mode: CommuteMode) {
@@ -136,6 +153,24 @@ export default function MapSelector({ places, savedListings, city }: Props) {
           </div>
         )}
 
+        <label className="saved-home-picker" htmlFor="saved-home">
+          <span>Saved home to compare</span>
+          <select
+            id="saved-home"
+            value={selectedHomeId ?? ""}
+            onChange={(event) => setSelectedHomeId(
+              event.target.value ? Number(event.target.value) : null,
+            )}
+          >
+            <option value="">Choose a saved home</option>
+            {visibleSavedListings.map((listing) => (
+              <option key={listing.id} value={listing.id}>
+                {listing.title} · ${listing.rent}/month
+              </option>
+            ))}
+          </select>
+        </label>
+
         <fieldset className="commute-mode-picker">
           <legend>How would you travel?</legend>
           <div>
@@ -175,6 +210,12 @@ export default function MapSelector({ places, savedListings, city }: Props) {
           <strong>{selectedModes.join(" + ")}</strong>
         </div>
 
+        <CommuteComparison
+          estimates={commuteEstimates}
+          hasHome={Boolean(selectedHome?.coordinates)}
+          hasDestination={Boolean(selectedDestination)}
+        />
+
         <div className="area-place-list" aria-label={`Places in ${city.shortLabel}`}>
           <div>
             <p className="eyebrow">Places in {city.shortLabel}</p>
@@ -194,6 +235,8 @@ export default function MapSelector({ places, savedListings, city }: Props) {
         places={mapPlaces}
         highlightedPlaceId={selectedDestination?.id ?? ""}
         savedListings={visibleSavedListings}
+        selectedHomeId={selectedHomeId}
+        onSelectSavedHome={setSelectedHomeId}
         focusCoordinates={selectedDestination?.coordinates ?? city.coordinates}
       />
     </section>
