@@ -15,4 +15,5 @@ export type LocationSearchInput = {
   query: string;
   kind: LocationSearchKind;
   proximity?: Coordinates;
+  boundingBox?: [number, number, number, number];
 };

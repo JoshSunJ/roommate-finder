@@ -15,6 +15,7 @@ type Props = {
   onSelect: (result: LocationSearchResult) => void;
   onInputChange?: () => void;
   proximity?: Coordinates;
+  boundingBox?: [number, number, number, number];
   value?: string;
   name?: string;
   required?: boolean;
@@ -27,6 +28,7 @@ export default function LocationSearch({
   onSelect,
   onInputChange,
   proximity,
+  boundingBox,
   value = "",
   name,
   required = false,
@@ -55,6 +57,9 @@ export default function LocationSearch({
       if (proximity) {
         params.set("latitude", String(proximity.latitude));
         params.set("longitude", String(proximity.longitude));
+      }
+      if (boundingBox) {
+        params.set("bbox", boundingBox.join(","));
       }
 
       try {
@@ -85,7 +90,7 @@ export default function LocationSearch({
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [kind, proximity, query, selectedLabel]);
+  }, [boundingBox, kind, proximity, query, selectedLabel]);
 
   return (
     <div className="location-search">

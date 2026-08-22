@@ -46,13 +46,26 @@ export async function GET(request: NextRequest) {
     && latitude <= 90
     ? { longitude, latitude }
     : undefined;
+  const rawBoundingBox = request.nextUrl.searchParams.get("bbox");
+  const boundingBoxValues = rawBoundingBox?.split(",").map(Number);
+  const boundingBox = boundingBoxValues?.length === 4
+    && boundingBoxValues.every(Number.isFinite)
+    && boundingBoxValues[0] >= -180
+    && boundingBoxValues[2] <= 180
+    && boundingBoxValues[1] >= -90
+    && boundingBoxValues[3] <= 90
+    && boundingBoxValues[0] < boundingBoxValues[2]
+    && boundingBoxValues[1] < boundingBoxValues[3]
+    ? boundingBoxValues as [number, number, number, number]
+    : undefined;
 
   try {
     const results = await searchLocations({
       query,
       kind: requestedKind as LocationSearchKind,
       proximity,
-    }, apiKey);
+      boundingBox,
+    }, apiKey, request.nextUrl.origin);
 
     return Response.json({ results });
   } catch {
