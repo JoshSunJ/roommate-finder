@@ -14,13 +14,14 @@ import {
   toListingFeatureCollection,
   type ListingMapProperties,
 } from "@/features/map/listing-geojson";
-import type { Listing } from "@/features/listings/types";
+import type { Coordinates, Listing } from "@/features/listings/types";
 
 type Props = {
   listings: Listing[];
   savedListingIds: number[];
   selectedListingId?: number | null;
   onSelectListing?: (listingId: number | null) => void;
+  focusCoordinates: Coordinates;
 };
 
 type SelectedListing = ListingMapProperties & {
@@ -33,6 +34,7 @@ export default function HousingMap({
   savedListingIds,
   selectedListingId = null,
   onSelectListing,
+  focusCoordinates,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [mapState, setMapState] = useState<"loading" | "ready" | "error">("loading");
@@ -100,7 +102,7 @@ export default function HousingMap({
     >
       <Map
         ref={mapRef}
-        initialViewState={{ longitude: -121.8811, latitude: 37.3352, zoom: 12.5 }}
+        initialViewState={{ longitude: focusCoordinates.longitude, latitude: focusCoordinates.latitude, zoom: 11.5 }}
         mapStyle={mapStyle}
         onClick={() => onSelectListing?.(null)}
         onLoad={() => setMapState("ready")}

@@ -5,6 +5,11 @@ import { useMemo, useState } from "react";
 import LocationMap from "@/components/LocationMap";
 import LocationSearch from "@/components/LocationSearch";
 import type { Listing } from "@/features/listings/types";
+import {
+  defaultCity,
+  isInCityArea,
+  type CityPreference,
+} from "@/features/location-search/city-preference";
 import type { LocationSearchResult } from "@/features/location-search/types";
 import type { Place, PlaceCategory } from "@/features/places/types";
 import type { CommuteMode } from "@/features/preferences/types";
@@ -12,18 +17,10 @@ import type { CommuteMode } from "@/features/preferences/types";
 type Props = {
   places: Place[];
   savedListings: Listing[];
+  city: CityPreference;
 };
 
 const commuteModes: CommuteMode[] = ["transit", "drive", "bike", "walk", "ride share"];
-
-const defaultCity: LocationSearchResult = {
-  id: "unitern.san-jose",
-  label: "San Jose, California, United States",
-  shortLabel: "San Jose",
-  type: "place",
-  coordinates: { latitude: 37.3352, longitude: -121.8811 },
-  boundingBox: [-122.08, 37.12, -121.68, 37.55],
-};
 
 function placeAsSearchResult(place: Place): LocationSearchResult {
   return {
@@ -35,31 +32,16 @@ function placeAsSearchResult(place: Place): LocationSearchResult {
   };
 }
 
-function isInsideCity(listing: Listing, city: LocationSearchResult) {
-  if (!listing.coordinates) return false;
-  if (city.boundingBox) {
-    const [west, south, east, north] = city.boundingBox;
-    return listing.coordinates.longitude >= west
-      && listing.coordinates.longitude <= east
-      && listing.coordinates.latitude >= south
-      && listing.coordinates.latitude <= north;
-  }
-
-  return Math.abs(listing.coordinates.latitude - city.coordinates.latitude) < 0.55
-    && Math.abs(listing.coordinates.longitude - city.coordinates.longitude) < 0.7;
-}
-
-export default function MapSelector({ places, savedListings }: Props) {
+export default function MapSelector({ places, savedListings, city }: Props) {
   const initialCampus = places.find((place) => place.category === "Campus") ?? places[0];
   const [audience, setAudience] = useState<"student" | "intern">("student");
-  const [selectedCity, setSelectedCity] = useState(defaultCity);
   const [selectedDestination, setSelectedDestination] = useState<LocationSearchResult | null>(
-    initialCampus ? placeAsSearchResult(initialCampus) : null,
+    city.id === defaultCity.id && initialCampus ? placeAsSearchResult(initialCampus) : null,
   );
   const [selectedModes, setSelectedModes] = useState<CommuteMode[]>(["transit", "bike"]);
   const [maxCommuteMinutes, setMaxCommuteMinutes] = useState(30);
 
-  const isStarterCity = selectedCity.id === defaultCity.id;
+  const isStarterCity = city.id === defaultCity.id;
   const localDestinations = useMemo(
     () => places.filter((place) =>
       audience === "student" ? place.category === "Campus" : place.category === "Company",
@@ -82,8 +64,8 @@ export default function MapSelector({ places, savedListings }: Props) {
     }];
   }, [audience, isStarterCity, places, selectedDestination]);
   const visibleSavedListings = useMemo(
-    () => savedListings.filter((listing) => isInsideCity(listing, selectedCity)),
-    [savedListings, selectedCity],
+    () => savedListings.filter((listing) => isInCityArea(listing.coordinates, city)),
+    [city, savedListings],
   );
 
   function toggleMode(mode: CommuteMode) {
@@ -111,18 +93,6 @@ export default function MapSelector({ places, savedListings }: Props) {
           <h2>What brings you here?</h2>
         </div>
 
-        <LocationSearch
-          key={selectedCity.id}
-          kind="city"
-          label="Search a US city"
-          placeholder="Seattle, Austin, New York…"
-          value={selectedCity.label}
-          onSelect={(city) => {
-            setSelectedCity(city);
-            setSelectedDestination(null);
-          }}
-        />
-
         <div className="routine-switch" aria-label="Choose student or intern routine">
           {(["student", "intern"] as const).map((option) => (
             <button
@@ -138,12 +108,12 @@ export default function MapSelector({ places, savedListings }: Props) {
         </div>
 
         <LocationSearch
-          key={`${audience}-${selectedCity.id}-${selectedDestination?.id ?? "empty"}`}
+          key={`${audience}-${city.id}-${selectedDestination?.id ?? "empty"}`}
           kind="destination"
           label={audience === "student" ? "University or campus" : "Company or workplace"}
           placeholder={audience === "student" ? "Search universities…" : "Search employers…"}
           value={selectedDestination?.label ?? ""}
-          proximity={selectedCity.coordinates}
+          proximity={city.coordinates}
           onSelect={setSelectedDestination}
         />
 
@@ -197,16 +167,16 @@ export default function MapSelector({ places, savedListings }: Props) {
 
         <div className="commute-summary">
           <span>City</span>
-          <strong>{selectedCity.shortLabel}</strong>
+          <strong>{city.shortLabel}</strong>
           <span>Routine</span>
           <strong>{audience}</strong>
           <span>Preferred</span>
           <strong>{selectedModes.join(" + ")}</strong>
         </div>
 
-        <div className="area-place-list" aria-label={`Places in ${selectedCity.shortLabel}`}>
+        <div className="area-place-list" aria-label={`Places in ${city.shortLabel}`}>
           <div>
-            <p className="eyebrow">Places in {selectedCity.shortLabel}</p>
+            <p className="eyebrow">Places in {city.shortLabel}</p>
             <span>{mapPlaces.length} places</span>
           </div>
           {mapPlaces.map((place) => (
@@ -223,7 +193,7 @@ export default function MapSelector({ places, savedListings }: Props) {
         places={mapPlaces}
         highlightedPlaceId={selectedDestination?.id ?? ""}
         savedListings={visibleSavedListings}
-        focusCoordinates={selectedDestination?.coordinates ?? selectedCity.coordinates}
+        focusCoordinates={selectedDestination?.coordinates ?? city.coordinates}
       />
     </section>
   );

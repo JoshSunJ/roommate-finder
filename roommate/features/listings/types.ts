@@ -40,6 +40,7 @@ export interface ListingFilters {
   maxRent?: number;
   location?: string;
   minBedrooms?: number;
+  city?: import("@/features/location-search/city-preference").CityPreference;
 }
 
 export type CreateListingInput = Omit<
