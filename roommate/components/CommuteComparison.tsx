@@ -1,15 +1,26 @@
-import type { CommuteEstimate } from "@/features/commute/types";
+import type {
+  CommuteEstimate,
+  CommuteRoute,
+} from "@/features/commute/types";
 
 type Props = {
   estimates: CommuteEstimate[];
+  roadRoutes: CommuteRoute[];
   hasHome: boolean;
   hasDestination: boolean;
+  maxCommuteMinutes: number;
+  routesLoading: boolean;
+  routesUnavailable: boolean;
 };
 
 export default function CommuteComparison({
   estimates,
+  roadRoutes,
   hasHome,
   hasDestination,
+  maxCommuteMinutes,
+  routesLoading,
+  routesUnavailable,
 }: Props) {
   if (!hasHome || !hasDestination) {
     return (
@@ -35,23 +46,41 @@ export default function CommuteComparison({
       </div>
 
       <div className="commute-estimate-list">
-        {estimates.map((estimate) => (
-          <article
-            key={estimate.mode}
-            className={estimate.withinLimit ? "is-within-limit" : "is-over-limit"}
-          >
-            <div>
-              <strong>{estimate.mode}</strong>
-              <span>{estimate.distanceMiles.toFixed(1)} estimated miles</span>
-            </div>
-            <b>{estimate.durationMinutes} min</b>
-            <small>{estimate.withinLimit ? "Within your limit" : "Over your limit"}</small>
-          </article>
-        ))}
+        {estimates.map((estimate) => {
+          const roadRoute = roadRoutes.find((route) => route.mode === estimate.mode);
+          const distanceMiles = roadRoute?.distanceMiles ?? estimate.distanceMiles;
+          const durationMinutes = roadRoute?.durationMinutes ?? estimate.durationMinutes;
+          const withinLimit = durationMinutes <= maxCommuteMinutes;
+
+          return (
+            <article
+              key={estimate.mode}
+              className={withinLimit ? "is-within-limit" : "is-over-limit"}
+            >
+              <div>
+                <strong>{estimate.mode}</strong>
+                <span>{distanceMiles.toFixed(1)} {roadRoute ? "road" : "estimated"} miles</span>
+              </div>
+              <b>{durationMinutes} min</b>
+              <small>{withinLimit ? "Within your limit" : "Over your limit"}</small>
+              <em>{roadRoute ? "Road route" : "Planning estimate"}</em>
+            </article>
+          );
+        })}
       </div>
 
+      <p className="commute-comparison__status" aria-live="polite">
+        {routesLoading
+          ? "Calculating road routes…"
+          : routesUnavailable
+            ? "Road routing is unavailable; estimates remain visible."
+            : roadRoutes.length > 0
+              ? "Road geometry is active for supported modes."
+              : "Transit currently uses a planning estimate."}
+      </p>
+
       <p className="commute-comparison__disclaimer">
-        Early estimate based on straight-line distance and documented mode assumptions—not live traffic or a transit schedule yet.
+        Road routes use the provider network but not live traffic. Transit remains an estimate until a schedule-aware provider is added.
       </p>
     </section>
   );
