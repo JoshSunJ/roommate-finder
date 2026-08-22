@@ -13,6 +13,7 @@ import Map, {
 } from "react-map-gl/maplibre";
 
 import { mapStyle } from "@/features/map/config";
+import type { CommuteRoute } from "@/features/commute/types";
 import type { Coordinates, Listing } from "@/features/listings/types";
 import type { Place } from "@/features/places/types";
 
@@ -23,6 +24,7 @@ type Props = {
   selectedHomeId: number | null;
   onSelectSavedHome: (listingId: number) => void;
   focusCoordinates: Coordinates;
+  roadRoute: CommuteRoute | null;
 };
 
 type SelectedMarker =
@@ -37,6 +39,7 @@ export default function MapInner({
   selectedHomeId,
   onSelectSavedHome,
   focusCoordinates,
+  roadRoute,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -57,9 +60,13 @@ export default function MapInner({
   const commuteLine = useMemo(() => {
     if (!commuteHome?.coordinates || !highlightedPlace) return null;
 
-    return {
+    return roadRoute ? {
       type: "Feature" as const,
-      properties: {},
+      properties: { source: "road-route" },
+      geometry: roadRoute.geometry,
+    } : {
+      type: "Feature" as const,
+      properties: { source: "estimate" },
       geometry: {
         type: "LineString" as const,
         coordinates: [
@@ -68,7 +75,7 @@ export default function MapInner({
         ],
       },
     };
-  }, [commuteHome, highlightedPlace]);
+  }, [commuteHome, highlightedPlace, roadRoute]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -116,7 +123,7 @@ export default function MapInner({
                 "line-color": "#d5ff52",
                 "line-width": 5,
                 "line-opacity": 0.9,
-                "line-dasharray": [1.4, 1.2],
+                ...(roadRoute ? {} : { "line-dasharray": [1.4, 1.2] }),
               }}
             />
           </Source>
@@ -211,6 +218,7 @@ export default function MapInner({
       <div className="area-map-legend">
         <span><i className="legend-destination" />Destination</span>
         <span><i className="legend-home" />Saved home</span>
+        {roadRoute && <span><i className="legend-route" />{roadRoute.mode} route</span>}
       </div>
     </div>
   );

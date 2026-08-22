@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { CommuteRoute } from "@/features/commute/types";
 import type { Place } from "@/features/places/types";
 import type { Coordinates, Listing } from "@/features/listings/types";
 
@@ -13,8 +14,9 @@ type Props = {
   selectedHomeId: number | null;
   onSelectSavedHome: (listingId: number) => void;
   focusCoordinates: Coordinates;
+  roadRoute: CommuteRoute | null;
 };
 
-export default function LocationMap({ places, highlightedPlaceId, savedListings, selectedHomeId, onSelectSavedHome, focusCoordinates }: Props) {
-  return <MapInner places={places} highlightedPlaceId={highlightedPlaceId} savedListings={savedListings} selectedHomeId={selectedHomeId} onSelectSavedHome={onSelectSavedHome} focusCoordinates={focusCoordinates} />;
+export default function LocationMap({ places, highlightedPlaceId, savedListings, selectedHomeId, onSelectSavedHome, focusCoordinates, roadRoute }: Props) {
+  return <MapInner places={places} highlightedPlaceId={highlightedPlaceId} savedListings={savedListings} selectedHomeId={selectedHomeId} onSelectSavedHome={onSelectSavedHome} focusCoordinates={focusCoordinates} roadRoute={roadRoute} />;
 }

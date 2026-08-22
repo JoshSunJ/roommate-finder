@@ -712,6 +712,8 @@ button, input, select, textarea { font: inherit; }
 .commute-estimate-list article small { color: var(--ink-muted); font-size: 0.6rem; }
 .commute-estimate-list article b { grid-row: 1 / 3; grid-column: 2; color: var(--ink); font-size: 0.9rem; }
 .commute-estimate-list article small { grid-column: 1 / -1; }
+.commute-estimate-list article em { grid-column: 1 / -1; color: var(--blue); font-size: 0.56rem; font-style: normal; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.commute-comparison__status { margin: 0; color: var(--lime); font-size: 0.62rem; font-weight: 800; line-height: 1.45; }
 .commute-comparison__disclaimer { margin: 0; color: var(--ink-muted); font-size: 0.62rem; line-height: 1.5; }
 
 .area-place-list { display: grid; gap: 0.2rem; }
@@ -761,6 +763,7 @@ button, input, select, textarea { font: inherit; }
 .area-map-legend i { width: 0.65rem; aspect-ratio: 1; border-radius: 50%; }
 .legend-destination { background: var(--coral); }
 .legend-home { background: var(--lime); }
+.legend-route { background: var(--blue); }
 
 .listing-location-map { position: relative; height: 420px; min-height: 420px; }
 .location-picker-pin { display: grid; width: 2.8rem; height: 2.8rem; place-items: center; border: 3px solid var(--night); border-radius: 0.5rem 0.5rem 1.3rem 0.5rem; background: var(--coral); color: var(--night); cursor: grab; font-size: 1rem; transform: rotate(45deg); box-shadow: 0 12px 24px rgb(0 0 0 / 28%); }
