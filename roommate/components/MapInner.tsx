@@ -4,9 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Map, {
+  Layer,
   Marker,
   NavigationControl,
   Popup,
+  Source,
   type MapRef,
 } from "react-map-gl/maplibre";
 
@@ -18,6 +20,8 @@ type Props = {
   places: Place[];
   highlightedPlaceId: string;
   savedListings: Listing[];
+  selectedHomeId: number | null;
+  onSelectSavedHome: (listingId: number) => void;
   focusCoordinates: Coordinates;
 };
 
@@ -30,6 +34,8 @@ export default function MapInner({
   places,
   highlightedPlaceId,
   savedListings,
+  selectedHomeId,
+  onSelectSavedHome,
   focusCoordinates,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
@@ -45,9 +51,37 @@ export default function MapInner({
   const selectedListing = selectedMarker?.kind === "listing"
     ? savedListings.find((listing) => listing.id === selectedMarker.id)
     : undefined;
+  const commuteHome = selectedHomeId === null
+    ? undefined
+    : savedListings.find((listing) => listing.id === selectedHomeId);
+  const commuteLine = useMemo(() => {
+    if (!commuteHome?.coordinates || !highlightedPlace) return null;
+
+    return {
+      type: "Feature" as const,
+      properties: {},
+      geometry: {
+        type: "LineString" as const,
+        coordinates: [
+          [commuteHome.coordinates.longitude, commuteHome.coordinates.latitude],
+          [highlightedPlace.coordinates.longitude, highlightedPlace.coordinates.latitude],
+        ],
+      },
+    };
+  }, [commuteHome, highlightedPlace]);
 
   useEffect(() => {
     if (!mapReady) return;
+    if (commuteHome?.coordinates && highlightedPlace) {
+      mapRef.current?.fitBounds(
+        [
+          [commuteHome.coordinates.longitude, commuteHome.coordinates.latitude],
+          [highlightedPlace.coordinates.longitude, highlightedPlace.coordinates.latitude],
+        ],
+        { padding: 100, maxZoom: 14, duration: 800 },
+      );
+      return;
+    }
     const target = highlightedPlace?.coordinates ?? focusCoordinates;
     mapRef.current?.flyTo({
       center: [
@@ -57,7 +91,7 @@ export default function MapInner({
       zoom: highlightedPlace ? 13.5 : 10.5,
       duration: 800,
     });
-  }, [focusCoordinates, highlightedPlace, mapReady]);
+  }, [commuteHome, focusCoordinates, highlightedPlace, mapReady]);
 
   return (
     <div className="location-map">
@@ -72,6 +106,21 @@ export default function MapInner({
         aria-label="Area map showing destinations and saved homes"
       >
         <NavigationControl position="top-right" showCompass={false} />
+
+        {commuteLine && (
+          <Source id="commute-preview" type="geojson" data={commuteLine}>
+            <Layer
+              id="commute-preview-line"
+              type="line"
+              paint={{
+                "line-color": "#d5ff52",
+                "line-width": 5,
+                "line-opacity": 0.9,
+                "line-dasharray": [1.4, 1.2],
+              }}
+            />
+          </Source>
+        )}
 
         {places.map((place) => {
           const isDestination = place.id === highlightedPlaceId;
@@ -111,12 +160,13 @@ export default function MapInner({
             longitude={listing.coordinates.longitude}
             latitude={listing.coordinates.latitude}
             anchor="bottom"
-            onClick={(event) => {
-              event.originalEvent.stopPropagation();
-              setSelectedMarker({ kind: "listing", id: listing.id });
-            }}
-          >
-            <button type="button" className="area-marker area-marker--saved" aria-label={`Saved home: ${listing.title}`}>
+              onClick={(event) => {
+                event.originalEvent.stopPropagation();
+                setSelectedMarker({ kind: "listing", id: listing.id });
+                onSelectSavedHome(listing.id);
+              }}
+            >
+            <button type="button" className={`area-marker area-marker--saved${selectedHomeId === listing.id ? " area-marker--selected-home" : ""}`} aria-label={`Saved home: ${listing.title}`}>
               ♥
             </button>
           </Marker>
