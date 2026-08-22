@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import ListingLocationPicker from "@/components/ListingLocationPicker";
+import LocationSearch from "@/components/LocationSearch";
 import type { Coordinates, Listing } from "@/features/listings/types";
 
 type Props =
@@ -26,6 +27,7 @@ export default function ListingForm({ mode, listing }: Props) {
   const [selectedCoordinates, setSelectedCoordinates] = useState<Coordinates | null>(
     listing?.coordinates ?? null,
   );
+  const [publicLocation, setPublicLocation] = useState(listing?.location ?? "");
 
   function goToNextStep() {
     setError("");
@@ -137,7 +139,22 @@ export default function ListingForm({ mode, listing }: Props) {
 
       <section className="form-step" data-form-step="2" hidden={step !== 2}>
         <div className="form-step__heading"><p className="eyebrow">Step 03</p><h2>Place it on the map.</h2><span>Use a public neighborhood label and an approximate pin—not a private unit number.</span></div>
-        <label className="full-width">Public location<input name="location" required maxLength={120} defaultValue={listing?.location} placeholder="Downtown San Jose, CA" /></label>
+        <div className="full-width">
+          <LocationSearch
+            key={publicLocation || "new-location"}
+            kind="address"
+            label="Public location"
+            name="location"
+            required
+            value={publicLocation}
+            placeholder="Search an address or neighborhood…"
+            onInputChange={() => setSelectedCoordinates(null)}
+            onSelect={(result) => {
+              setPublicLocation(result.label);
+              setSelectedCoordinates(result.coordinates);
+            }}
+          />
+        </div>
         <div className="full-width location-picker-field">
           <ListingLocationPicker value={selectedCoordinates} onChange={setSelectedCoordinates} />
           <p className="map-selection-status">
