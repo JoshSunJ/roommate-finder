@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import type { CurrentUser } from "@/lib/current-user";
+import { isInCityArea } from "@/features/location-search/city-preference";
 import type { CreateListingInput, Listing, ListingFilters } from "./types";
 
 const listingWithOwner = {
@@ -91,7 +92,8 @@ export function filterListings(listingsToFilter: Listing[], filters: ListingFilt
     const isWithinBudget = filters.maxRent === undefined || listing.rent <= filters.maxRent;
     const isInLocation = !filters.location || listing.location === filters.location;
     const hasEnoughBedrooms = filters.minBedrooms === undefined || listing.bedrooms >= filters.minBedrooms;
-    return isWithinBudget && isInLocation && hasEnoughBedrooms;
+    const isInSelectedCity = !filters.city || isInCityArea(listing.coordinates, filters.city);
+    return isWithinBudget && isInLocation && hasEnoughBedrooms && isInSelectedCity;
   });
 }
 

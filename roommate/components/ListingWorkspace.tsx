@@ -4,13 +4,14 @@ import { useCallback, useState } from "react";
 
 import ListingExplorerMap from "@/components/ListingExplorerMap";
 import SaveableListingCard from "@/components/SaveableListingCard";
-import type { Listing } from "@/features/listings/types";
+import type { Coordinates, Listing } from "@/features/listings/types";
 
 type Props = {
   listings: Listing[];
   savedListingIds: number[];
   signedIn: boolean;
   initialSelectedListingId?: number;
+  focusCoordinates: Coordinates;
 };
 
 export default function ListingWorkspace({
@@ -18,6 +19,7 @@ export default function ListingWorkspace({
   savedListingIds,
   signedIn,
   initialSelectedListingId,
+  focusCoordinates,
 }: Props) {
   const [selectedListingId, setSelectedListingId] = useState<number | null>(
     initialSelectedListingId ?? null,
@@ -106,6 +108,7 @@ export default function ListingWorkspace({
             savedListingIds={savedListingIds}
             selectedListingId={selectedListingId}
             onSelectListing={selectFromMap}
+            focusCoordinates={focusCoordinates}
           />
         </aside>
       </div>
