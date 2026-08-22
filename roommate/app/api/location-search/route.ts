@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   const apiKey = process.env.MAPTILER_API_KEY?.trim();
   if (!apiKey) {
     return Response.json(
-      { error: "Location search is not configured yet." },
+      { error: "Add MAPTILER_API_KEY to .env, then restart the development server." },
       { status: 503 },
     );
   }

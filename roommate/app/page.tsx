@@ -1,12 +1,11 @@
 import Link from "next/link";
 
 import Navbar from "@/components/Navbar";
+import HomeCitySearch from "@/components/HomeCitySearch";
 import ListingFilters from "@/components/ListingFilters";
 import ListingWorkspace from "@/components/ListingWorkspace";
-import {
-  getListingLocations,
-  getListings,
-} from "@/features/listings/service";
+import { getListings } from "@/features/listings/service";
+import { getCityPreference } from "@/features/location-search/server";
 import type { ListingFilters as ListingFiltersType } from "@/features/listings/types";
 import { getSavedItemIds } from "@/features/saved-items/service";
 import { getCurrentUser } from "@/lib/current-user";
@@ -25,17 +24,19 @@ function toOptionalPositiveNumber(value: string | string[] | undefined) {
 
 export default async function Home({ searchParams }: PageProps) {
   const query = await searchParams;
+  const city = await getCityPreference();
   const filters: ListingFiltersType = {
     maxRent: toOptionalPositiveNumber(query.maxRent),
     location: typeof query.location === "string" ? query.location : undefined,
     minBedrooms: toOptionalPositiveNumber(query.minBedrooms),
+    city,
   };
 
-  const [listings, locations, currentUser] = await Promise.all([
+  const [listings, currentUser] = await Promise.all([
     getListings(filters),
-    getListingLocations(),
     getCurrentUser(),
   ]);
+  const locations = [...new Set(listings.map((listing) => listing.location))].sort();
   const savedListingIds = currentUser
     ? (await getSavedItemIds(currentUser.id)).listingIds
     : [];
@@ -62,6 +63,7 @@ export default async function Home({ searchParams }: PageProps) {
               Search housing around the school, company, commute, and everyday
               places that will shape your next move.
             </p>
+            <HomeCitySearch city={city} />
             <div className="hero-actions">
               <a className="button button--primary" href="#listings">
                 Explore homes <span aria-hidden="true">↘</span>
@@ -92,7 +94,7 @@ export default async function Home({ searchParams }: PageProps) {
           <div className="section-heading">
             <div>
               <p className="eyebrow">01 · Available now</p>
-              <h2 id="available-listings">Homes worth the commute.</h2>
+              <h2 id="available-listings">Homes around {city.shortLabel}.</h2>
             </div>
             <p className="result-count"><strong>{listings.length}</strong> places found</p>
           </div>
@@ -104,6 +106,7 @@ export default async function Home({ searchParams }: PageProps) {
             savedListingIds={savedListingIds}
             signedIn={Boolean(currentUser)}
             initialSelectedListingId={initialSelectedListingId}
+            focusCoordinates={city.coordinates}
           />
 
           {listings.length === 0 && (

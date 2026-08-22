@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-import type { Listing } from "@/features/listings/types";
+import type { Coordinates, Listing } from "@/features/listings/types";
 
 const ListingExplorerMapInner = dynamic(
   () => import("@/features/map/components/HousingMap"),
@@ -17,6 +17,7 @@ type Props = {
   savedListingIds: number[];
   selectedListingId?: number | null;
   onSelectListing?: (listingId: number | null) => void;
+  focusCoordinates: Coordinates;
 };
 
 export default function ListingExplorerMap({
@@ -24,6 +25,7 @@ export default function ListingExplorerMap({
   savedListingIds,
   selectedListingId,
   onSelectListing,
+  focusCoordinates,
 }: Props) {
   // A listing created before map placement existed can still appear as a card,
   // but cannot truthfully be drawn as a map pin.
@@ -35,6 +37,7 @@ export default function ListingExplorerMap({
       savedListingIds={savedListingIds}
       selectedListingId={selectedListingId}
       onSelectListing={onSelectListing}
+      focusCoordinates={focusCoordinates}
     />
   );
 }
