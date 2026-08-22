@@ -114,6 +114,7 @@ export default function MapSelector({ places, savedListings, city }: Props) {
           placeholder={audience === "student" ? "Search universities…" : "Search employers…"}
           value={selectedDestination?.label ?? ""}
           proximity={city.coordinates}
+          boundingBox={city.boundingBox}
           onSelect={setSelectedDestination}
         />
 

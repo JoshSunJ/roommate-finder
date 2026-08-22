@@ -11,6 +11,8 @@ type MapTilerFeature = {
   place_name?: string;
   center?: [number, number];
   bbox?: [number, number, number, number];
+  relevance?: number;
+  matching_text?: string;
 };
 
 type MapTilerResponse = { features?: MapTilerFeature[] };
@@ -29,7 +31,13 @@ export function buildMapTilerSearchUrl(
   url.searchParams.set("autocomplete", "true");
   url.searchParams.set("limit", "7");
 
-  if (input.kind === "city") url.searchParams.set("types", "place");
+  if (input.kind === "city") {
+    url.searchParams.set(
+      "types",
+      "municipality,subregion,municipal_district,locality,place",
+    );
+    url.searchParams.set("fuzzyMatch", "false");
+  }
   if (input.kind === "destination") url.searchParams.set("types", "poi");
   if (input.proximity) {
     url.searchParams.set(
@@ -37,8 +45,39 @@ export function buildMapTilerSearchUrl(
       `${input.proximity.longitude},${input.proximity.latitude}`,
     );
   }
+  if (input.boundingBox) {
+    url.searchParams.set("bbox", input.boundingBox.join(","));
+  }
 
   return url;
+}
+
+const cityTypePriority: Record<string, number> = {
+  municipality: 50,
+  subregion: 45,
+  municipal_district: 40,
+  locality: 30,
+  place: 10,
+};
+
+function rankCityFeatures(features: MapTilerFeature[], query: string) {
+  const normalizedQuery = query.trim().toLocaleLowerCase("en-US");
+  const scored = features.map((feature, originalIndex) => {
+    const featureType = feature.place_type?.[0] ?? feature.type ?? "place";
+    const candidateText = feature.matching_text ?? feature.text ?? "";
+    const exactNameMatch = candidateText.toLocaleLowerCase("en-US") === normalizedQuery;
+    const score = (exactNameMatch ? 100 : 0)
+      + (cityTypePriority[featureType] ?? 0)
+      + (feature.relevance ?? 0) * 10;
+
+    return { feature, featureType, originalIndex, score };
+  });
+  const administrative = scored.filter(({ featureType }) => featureType !== "place");
+  const candidates = administrative.length > 0 ? administrative : scored;
+
+  return candidates
+    .sort((a, b) => b.score - a.score || a.originalIndex - b.originalIndex)
+    .map(({ feature }) => feature);
 }
 
 export function normalizeMapTilerResults(
@@ -66,10 +105,14 @@ export function normalizeMapTilerResults(
 export async function searchLocations(
   input: LocationSearchInput,
   apiKey: string,
+  requestOrigin: string,
   fetcher: typeof fetch = fetch,
 ) {
   const response = await fetcher(buildMapTilerSearchUrl(input, apiKey), {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      Origin: requestOrigin,
+    },
     cache: "no-store",
     signal: AbortSignal.timeout(5_000),
   });
@@ -78,5 +121,10 @@ export async function searchLocations(
     throw new Error(`MapTiler search failed with status ${response.status}.`);
   }
 
-  return normalizeMapTilerResults(await response.json() as MapTilerResponse);
+  const data = await response.json() as MapTilerResponse;
+  const features = input.kind === "city"
+    ? rankCityFeatures(data.features ?? [], input.query)
+    : data.features ?? [];
+
+  return normalizeMapTilerResults({ features });
 }

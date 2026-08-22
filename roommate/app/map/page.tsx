@@ -23,7 +23,7 @@ export default async function MapPage() {
           <h1>Build a life around {city.shortLabel}.</h1>
           <p>Start with a student or intern routine, then compare saved homes with the places you need every day.</p>
         </header>
-        <MapSelector places={places} savedListings={savedListings} city={city} />
+        <MapSelector key={city.id} places={places} savedListings={savedListings} city={city} />
       </main>
     </>
   );

@@ -84,6 +84,16 @@ export default function HousingMap({
   }, [listingData, mapState]);
 
   useEffect(() => {
+    if (mapState !== "ready" || listingData.features.length > 0) return;
+
+    mapRef.current?.flyTo({
+      center: [focusCoordinates.longitude, focusCoordinates.latitude],
+      zoom: 11.5,
+      duration: 600,
+    });
+  }, [focusCoordinates, listingData.features.length, mapState]);
+
+  useEffect(() => {
     if (!selectedListing || mapState !== "ready") return;
 
     mapRef.current?.flyTo({

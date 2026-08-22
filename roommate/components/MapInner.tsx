@@ -33,6 +33,7 @@ export default function MapInner({
   focusCoordinates,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
+  const [mapReady, setMapReady] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState<SelectedMarker>(null);
   const highlightedPlace = useMemo(
     () => places.find((place) => place.id === highlightedPlaceId) ?? places[0],
@@ -46,6 +47,7 @@ export default function MapInner({
     : undefined;
 
   useEffect(() => {
+    if (!mapReady) return;
     const target = highlightedPlace?.coordinates ?? focusCoordinates;
     mapRef.current?.flyTo({
       center: [
@@ -55,7 +57,7 @@ export default function MapInner({
       zoom: highlightedPlace ? 13.5 : 10.5,
       duration: 800,
     });
-  }, [focusCoordinates, highlightedPlace]);
+  }, [focusCoordinates, highlightedPlace, mapReady]);
 
   return (
     <div className="location-map">
@@ -64,6 +66,8 @@ export default function MapInner({
         initialViewState={{ longitude: focusCoordinates.longitude, latitude: focusCoordinates.latitude, zoom: 12.5 }}
         mapStyle={mapStyle}
         reuseMaps
+        onLoad={() => setMapReady(true)}
+        onStyleData={() => setMapReady(true)}
         onClick={() => setSelectedMarker(null)}
         aria-label="Area map showing destinations and saved homes"
       >
