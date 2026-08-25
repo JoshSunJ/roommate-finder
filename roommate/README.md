@@ -36,6 +36,48 @@ Listings are now stored in PostgreSQL rather than an in-memory array.
 
 The real connection string stays in `.env`, which Git ignores. `.env.example` documents the required local value.
 
+## Production database release process
+
+Unitern uses the same PostgreSQL schema in every environment, but it uses
+different database instances and credentials:
+
+```text
+Local development  -> Docker PostgreSQL on localhost
+CI                  -> Temporary PostgreSQL service for each workflow run
+Production          -> Managed PostgreSQL with TLS and backups
+```
+
+Configure these server-only production variables in the deployment platform,
+not in a committed file:
+
+```text
+DATABASE_URL         # application traffic; use a pooled URL when provided
+DIRECT_DATABASE_URL  # migration traffic; use the provider's direct URL
+```
+
+Some providers support Prisma migrations over their pooled URL. In that case,
+`DIRECT_DATABASE_URL` may be omitted and Prisma falls back to `DATABASE_URL`.
+
+Before a production release:
+
+1. Create an empty managed PostgreSQL database.
+2. Require TLS in both connection URLs (`sslmode=require` or stricter).
+3. Store the URLs as encrypted deployment secrets.
+4. Run `npm run db:validate:production` to reject local or unencrypted targets.
+5. Run `npm run db:deploy` from the deployment pipeline to apply committed migrations.
+6. Deploy the application only after migrations succeed.
+7. Verify `/api/health` returns HTTP 200 with `database: "reachable"`.
+
+`npm run db:migrate` is for development because it creates migration files and
+may ask development-only questions. Production uses `npm run db:deploy`, which
+only applies migrations already reviewed and committed to Git.
+
+Do not automatically seed production. The current seed script deletes listing
+data and is intentionally a local-development tool.
+
+The health endpoint exposes only `reachable` or `unreachable`; it never returns
+the database hostname, credentials, query error, or provider response.
+
 ## Photo storage
 
 Local development uses `PHOTO_STORAGE_DRIVER=local` and writes listing photos
