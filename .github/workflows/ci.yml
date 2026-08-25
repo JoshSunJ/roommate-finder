@@ -19,6 +19,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: roommate_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d roommate_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     defaults:
       run:
         working-directory: roommate
@@ -40,6 +55,12 @@ jobs:
 
       - name: Install locked dependencies
         run: npm ci
+
+      - name: Rebuild schema from committed migrations
+        run: npm run db:deploy
+
+      - name: Verify migration status
+        run: npm run db:status
 
       - name: Run unit tests
         run: npm test
