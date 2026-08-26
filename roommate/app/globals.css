@@ -777,6 +777,11 @@ button, input, select, textarea { font: inherit; }
 .route-replay:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
 .route-replay span { color: var(--lime); font-size: 0.9rem; }
 .route-traveler { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border: 3px solid var(--night); border-radius: 50%; background: var(--lime); box-shadow: 0 8px 22px rgb(0 0 0 / 35%); font-size: 1.1rem; }
+.commute-route-overlay { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.commute-route-overlay polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.commute-route-overlay__halo { stroke: #0b0b0a; stroke-width: 11; opacity: 0.72; }
+.commute-route-overlay__line { stroke: var(--lime); stroke-width: 7; opacity: 0.98; }
+.commute-route-overlay__line.is-estimate { stroke-dasharray: 10 8; }
 .route-prompt { position: absolute; z-index: 3; top: 1rem; left: 1rem; display: grid; max-width: 250px; gap: 0.3rem; border-radius: 0.8rem; padding: 0.75rem 0.85rem; background: rgb(9 9 9 / 88%); color: var(--ink); backdrop-filter: blur(12px); }
 .route-prompt strong { color: var(--lime); font-size: 0.72rem; }
 .route-prompt span { color: var(--ink-muted); font-size: 0.65rem; line-height: 1.45; }

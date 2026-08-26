@@ -10,6 +10,7 @@ import Map, {
   type MapRef,
 } from "react-map-gl/maplibre";
 import type { Feature, LineString } from "geojson";
+import type { Map as MapLibreMap } from "maplibre-gl";
 
 import AnimatedCommuteRoute from "@/components/AnimatedCommuteRoute";
 import { mapStyle } from "@/features/map/config";
@@ -46,6 +47,7 @@ export default function MapInner({
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [nativeMap, setNativeMap] = useState<MapLibreMap | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<SelectedMarker>(null);
   const [routeReplay, setRouteReplay] = useState(0);
   const highlightedPlace = useMemo(
@@ -127,20 +129,28 @@ export default function MapInner({
         ref={mapRef}
         initialViewState={{ longitude: focusCoordinates.longitude, latitude: focusCoordinates.latitude, zoom: 12.5 }}
         mapStyle={mapStyle}
-        reuseMaps
-        onLoad={() => setMapReady(true)}
-        onStyleData={() => setMapReady(true)}
+        onLoad={() => {
+          setNativeMap(mapRef.current?.getMap() ?? null);
+          setMapReady(true);
+        }}
+        onStyleData={() => {
+          const map = mapRef.current?.getMap();
+          if (map) setNativeMap(map);
+          setMapReady(true);
+        }}
         onClick={() => setSelectedMarker(null)}
         aria-label="Area map showing destinations and saved homes"
       >
         <NavigationControl position="top-right" showCompass={false} />
 
-        {commuteLine && (
+        {commuteLine && nativeMap && (
           <AnimatedCommuteRoute
             key={routeAnimationKey}
+            map={nativeMap}
             route={commuteLine}
             isEstimate={!roadRoute}
             mode={displayedMode}
+            replayRequested={routeReplay > 0}
           />
         )}
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Layer, Marker, Source } from "react-map-gl/maplibre";
+import { Marker } from "react-map-gl/maplibre";
 import type { Feature, LineString } from "geojson";
+import type { Map as MapLibreMap } from "maplibre-gl";
 
 import {
   sliceRouteAtProgress,
@@ -11,9 +12,11 @@ import {
 import type { CommuteMode } from "@/features/preferences/types";
 
 type Props = {
+  map: MapLibreMap;
   route: Feature<LineString>;
   isEstimate: boolean;
   mode: CommuteMode;
+  replayRequested: boolean;
 };
 
 const ANIMATION_DURATION_MS = 3200;
@@ -30,14 +33,15 @@ const modeIcon: Record<CommuteMode, string> = {
   "ride share": "🚕",
 };
 
-export default function AnimatedCommuteRoute({ route, isEstimate, mode }: Props) {
+export default function AnimatedCommuteRoute({ map, route, isEstimate, mode, replayRequested }: Props) {
   const [progress, setProgress] = useState(0);
+  const [, setProjectionRevision] = useState(0);
   const coordinates = route.geometry.coordinates as RouteCoordinate[];
 
   useEffect(() => {
     let frameId = 0;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!replayRequested && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       frameId = window.requestAnimationFrame(() => setProgress(1));
       return () => window.cancelAnimationFrame(frameId);
     }
@@ -49,7 +53,8 @@ export default function AnimatedCommuteRoute({ route, isEstimate, mode }: Props)
         1,
         (timestamp - startedAt) / ANIMATION_DURATION_MS,
       );
-      setProgress(easeOutCubic(elapsedProgress));
+      const easedProgress = easeOutCubic(elapsedProgress);
+      setProgress(easedProgress);
 
       if (elapsedProgress < 1) {
         frameId = window.requestAnimationFrame(drawNextFrame);
@@ -58,56 +63,37 @@ export default function AnimatedCommuteRoute({ route, isEstimate, mode }: Props)
 
     frameId = window.requestAnimationFrame(drawNextFrame);
     return () => window.cancelAnimationFrame(frameId);
-  }, []);
+  }, [coordinates, map, replayRequested]);
+
+  useEffect(() => {
+    const refreshProjection = () => setProjectionRevision((revision) => revision + 1);
+    map.on("move", refreshProjection);
+    map.on("resize", refreshProjection);
+    return () => {
+      map.off("move", refreshProjection);
+      map.off("resize", refreshProjection);
+    };
+  }, [map]);
 
   const visibleCoordinates = useMemo(
     () => sliceRouteAtProgress(coordinates, progress),
     [coordinates, progress],
   );
-  const progressStop = Math.min(0.999999, Math.max(0.000001, progress));
   const routeHead = visibleCoordinates.at(-1) ?? coordinates[0];
+  const projectedRoute = visibleCoordinates
+    .map(([longitude, latitude]) => map.project([longitude, latitude]))
+    .map((point) => `${point.x},${point.y}`)
+    .join(" ");
 
   return (
     <>
-      <Source id="commute-route" type="geojson" data={route} lineMetrics>
-        <Layer
-          id="commute-route-halo"
-          type="line"
-          layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{
-            "line-color": "#0b0b0a",
-            "line-width": 11,
-            "line-opacity": 0.72,
-          }}
+      <svg className="commute-route-overlay" aria-hidden="true">
+        <polyline className="commute-route-overlay__halo" points={projectedRoute} />
+        <polyline
+          className={`commute-route-overlay__line${isEstimate ? " is-estimate" : ""}`}
+          points={projectedRoute}
         />
-        <Layer
-          id="commute-route-base-line"
-          type="line"
-          layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{
-            "line-color": "#6f8cff",
-            "line-width": 7,
-            "line-opacity": 0.8,
-            ...(isEstimate ? { "line-dasharray": [1.4, 1.2] } : {}),
-          }}
-        />
-        <Layer
-          id="commute-route-progress-line"
-          type="line"
-          layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{
-            "line-width": 5,
-            "line-opacity": 0.95,
-            "line-gradient": [
-              "step",
-              ["line-progress"],
-              "#d5ff52",
-              progressStop,
-              "rgba(213, 255, 82, 0)",
-            ],
-          }}
-        />
-      </Source>
+      </svg>
 
       <Marker longitude={routeHead[0]} latitude={routeHead[1]} anchor="center">
         <span className="route-traveler" aria-hidden="true">{modeIcon[mode]}</span>
