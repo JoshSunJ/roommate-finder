@@ -14,7 +14,7 @@ type Props = {
   isEstimate: boolean;
 };
 
-const ANIMATION_DURATION_MS = 1800;
+const ANIMATION_DURATION_MS = 3200;
 
 function easeOutCubic(progress: number) {
   return 1 - (1 - progress) ** 3;
@@ -54,11 +54,7 @@ export default function AnimatedCommuteRoute({ route, isEstimate }: Props) {
     () => sliceRouteAtProgress(coordinates, progress),
     [coordinates, progress],
   );
-  const visibleRoute = useMemo<Feature<LineString>>(() => ({
-    type: "Feature",
-    properties: {},
-    geometry: { type: "LineString", coordinates: visibleCoordinates },
-  }), [visibleCoordinates]);
+  const progressStop = Math.min(0.999999, Math.max(0.000001, progress));
   const routeHead = useMemo<Feature<Point>>(() => ({
     type: "Feature",
     properties: {},
@@ -70,29 +66,42 @@ export default function AnimatedCommuteRoute({ route, isEstimate }: Props) {
 
   return (
     <>
-      <Source id="commute-route-base" type="geojson" data={route}>
+      <Source id="commute-route" type="geojson" data={route} lineMetrics>
+        <Layer
+          id="commute-route-halo"
+          type="line"
+          layout={{ "line-cap": "round", "line-join": "round" }}
+          paint={{
+            "line-color": "#0b0b0a",
+            "line-width": 11,
+            "line-opacity": 0.72,
+          }}
+        />
         <Layer
           id="commute-route-base-line"
           type="line"
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
-            "line-color": "#0b0b0a",
+            "line-color": "#6f8cff",
             "line-width": 7,
-            "line-opacity": 0.32,
+            "line-opacity": 0.8,
             ...(isEstimate ? { "line-dasharray": [1.4, 1.2] } : {}),
           }}
         />
-      </Source>
-
-      <Source id="commute-route-progress" type="geojson" data={visibleRoute}>
         <Layer
           id="commute-route-progress-line"
           type="line"
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
-            "line-color": "#d5ff52",
             "line-width": 5,
             "line-opacity": 0.95,
+            "line-gradient": [
+              "step",
+              ["line-progress"],
+              "#d5ff52",
+              progressStop,
+              "rgba(213, 255, 82, 0)",
+            ],
           }}
         />
       </Source>
