@@ -349,6 +349,8 @@ button, input, select, textarea { font: inherit; }
 .auth-form button:disabled { cursor: wait; opacity: 0.6; }
 .auth-form > p:last-child, .auth-form__hint { margin: 0; color: var(--ink-muted); font-size: 0.86rem; }
 .auth-form a { color: var(--lime); font-weight: 800; }
+.auth-form--success h2 { margin: 0; }
+.button-link { display: inline-flex; width: fit-content; border-radius: 0.55rem; padding: 0.85rem 1.1rem; background: var(--lime); color: var(--night); font-weight: 900; }
 .location-picker-field { display: grid; gap: 0.75rem; }
 .location-picker-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
 .location-picker-heading p { margin: 0; color: var(--ink-muted); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }

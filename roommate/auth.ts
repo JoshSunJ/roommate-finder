@@ -28,7 +28,7 @@ export const { auth, handlers } = NextAuth({
           where: { email: parsed.data.email.toLowerCase() },
         });
 
-        if (!user?.passwordHash) {
+        if (!user?.passwordHash || !user.emailVerifiedAt) {
           return null;
         }
 

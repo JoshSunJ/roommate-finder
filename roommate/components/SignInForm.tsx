@@ -21,7 +21,7 @@ export default function SignInForm() {
     });
 
     if (result?.error) {
-      setError("Email or password is incorrect.");
+      setError("Email, password, or verification status is incorrect.");
       setIsSubmitting(false);
       return;
     }
@@ -37,6 +37,7 @@ export default function SignInForm() {
       {error && <p className="form-error">{error}</p>}
       <button type="submit" disabled={isSubmitting}>{isSubmitting ? "Signing in…" : "Sign in"}</button>
       <p>New here? <Link href="/sign-up">Create an account</Link>.</p>
+      <p>Need another link? <Link href="/verify-email">Verify your email</Link>.</p>
     </form>
   );
 }

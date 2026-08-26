@@ -4,6 +4,7 @@ import {
   type ProductionDatabaseConfiguration,
   validateProductionDatabaseConfiguration,
 } from "@/lib/database-config";
+import { validateEmailDeliveryConfiguration } from "@/features/account-email/delivery";
 
 type Environment = Record<string, string | undefined>;
 
@@ -13,6 +14,7 @@ export type ProductionEnvironmentSummary = {
   database: ProductionDatabaseConfiguration;
   photoStorage: "s3";
   mapSearchProvider: "maptiler";
+  emailProvider: "resend";
   roadRoutingConfigured: boolean;
 };
 
@@ -76,6 +78,20 @@ export function validateProductionEnvironment(
 
   const authUrl = parseHttpsUrl(value(environment, "AUTH_URL"), "AUTH_URL", issues);
 
+  if (authUrl) {
+    try {
+      validateEmailDeliveryConfiguration({
+        ...environment,
+        NODE_ENV: "production",
+        AUTH_URL: authUrl.toString(),
+      });
+    } catch (error) {
+      issues.push(error instanceof Error
+        ? error.message
+        : "Account email configuration is invalid.");
+    }
+  }
+
   const adminEmail = value(environment, "ADMIN_EMAIL").toLowerCase();
   if (!z.string().email().safeParse(adminEmail).success || adminEmail === "admin@example.com") {
     issues.push("ADMIN_EMAIL must be a real administrator email address.");
@@ -119,6 +135,7 @@ export function validateProductionEnvironment(
     database,
     photoStorage: "s3",
     mapSearchProvider: "maptiler",
+    emailProvider: "resend",
     roadRoutingConfigured: Boolean(value(environment, "MAPBOX_ACCESS_TOKEN")),
   };
 }
