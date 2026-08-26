@@ -764,6 +764,10 @@ button, input, select, textarea { font: inherit; }
 .legend-destination { background: var(--coral); }
 .legend-home { background: var(--lime); }
 .legend-route { background: var(--blue); }
+.route-replay { position: absolute; z-index: 3; top: 1rem; left: 1rem; display: inline-flex; align-items: center; gap: 0.45rem; border: 0; border-radius: 999px; padding: 0.62rem 0.8rem; background: rgb(9 9 9 / 88%); color: var(--ink); cursor: pointer; font: inherit; font-size: 0.68rem; font-weight: 850; backdrop-filter: blur(12px); transition: color 160ms ease, transform 160ms ease; }
+.route-replay:hover { color: var(--lime); transform: translateY(-2px); }
+.route-replay:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+.route-replay span { color: var(--lime); font-size: 0.9rem; }
 
 .listing-location-map { position: relative; height: 420px; min-height: 420px; }
 .location-picker-pin { display: grid; width: 2.8rem; height: 2.8rem; place-items: center; border: 3px solid var(--night); border-radius: 0.5rem 0.5rem 1.3rem 0.5rem; background: var(--coral); color: var(--night); cursor: grab; font-size: 1rem; transform: rotate(45deg); box-shadow: 0 12px 24px rgb(0 0 0 / 28%); }
@@ -820,4 +824,5 @@ button, input, select, textarea { font: inherit; }
   html { scroll-behavior: auto; }
   .hero-city__sun,
   .hero-city__stop { animation: none; }
+  .route-replay { transition: none; }
 }

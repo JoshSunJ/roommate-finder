@@ -4,14 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Map, {
-  Layer,
   Marker,
   NavigationControl,
   Popup,
-  Source,
   type MapRef,
 } from "react-map-gl/maplibre";
+import type { Feature, LineString } from "geojson";
 
+import AnimatedCommuteRoute from "@/components/AnimatedCommuteRoute";
 import { mapStyle } from "@/features/map/config";
 import type { CommuteRoute } from "@/features/commute/types";
 import type { Coordinates, Listing } from "@/features/listings/types";
@@ -44,6 +44,7 @@ export default function MapInner({
   const mapRef = useRef<MapRef>(null);
   const [mapReady, setMapReady] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState<SelectedMarker>(null);
+  const [routeReplay, setRouteReplay] = useState(0);
   const highlightedPlace = useMemo(
     () => places.find((place) => place.id === highlightedPlaceId) ?? places[0],
     [highlightedPlaceId, places],
@@ -57,7 +58,7 @@ export default function MapInner({
   const commuteHome = selectedHomeId === null
     ? undefined
     : savedListings.find((listing) => listing.id === selectedHomeId);
-  const commuteLine = useMemo(() => {
+  const commuteLine = useMemo<Feature<LineString> | null>(() => {
     if (!commuteHome?.coordinates || !highlightedPlace) return null;
 
     return roadRoute ? {
@@ -76,6 +77,16 @@ export default function MapInner({
       },
     };
   }, [commuteHome, highlightedPlace, roadRoute]);
+  const routeAnimationKey = commuteLine
+    ? [
+      commuteLine.properties?.source,
+      selectedHomeId,
+      highlightedPlaceId,
+      roadRoute?.mode ?? "estimate",
+      commuteLine.geometry.coordinates.length,
+      routeReplay,
+    ].join(":")
+    : "no-route";
 
   useEffect(() => {
     if (!mapReady) return;
@@ -115,18 +126,11 @@ export default function MapInner({
         <NavigationControl position="top-right" showCompass={false} />
 
         {commuteLine && (
-          <Source id="commute-preview" type="geojson" data={commuteLine}>
-            <Layer
-              id="commute-preview-line"
-              type="line"
-              paint={{
-                "line-color": "#d5ff52",
-                "line-width": 5,
-                "line-opacity": 0.9,
-                ...(roadRoute ? {} : { "line-dasharray": [1.4, 1.2] }),
-              }}
-            />
-          </Source>
+          <AnimatedCommuteRoute
+            key={routeAnimationKey}
+            route={commuteLine}
+            isEstimate={!roadRoute}
+          />
         )}
 
         {places.map((place) => {
@@ -215,10 +219,26 @@ export default function MapInner({
         )}
       </Map>
 
+      {commuteLine && (
+        <button
+          type="button"
+          className="route-replay"
+          onClick={() => setRouteReplay((currentReplay) => currentReplay + 1)}
+          aria-label="Replay commute route animation"
+        >
+          Replay route <span aria-hidden="true">↻</span>
+        </button>
+      )}
+
       <div className="area-map-legend">
         <span><i className="legend-destination" />Destination</span>
         <span><i className="legend-home" />Saved home</span>
-        {roadRoute && <span><i className="legend-route" />{roadRoute.mode} route</span>}
+        {commuteLine && (
+          <span>
+            <i className="legend-route" />
+            {roadRoute ? `${roadRoute.mode} route` : "Planning path"}
+          </span>
+        )}
       </div>
     </div>
   );
