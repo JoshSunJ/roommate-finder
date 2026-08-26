@@ -87,6 +87,13 @@ export default function MapInner({
       routeReplay,
     ].join(":")
     : "no-route";
+  const routePrompt = savedListings.length === 0
+    ? "Save a mapped home in this city to create a route."
+    : !commuteHome?.coordinates
+      ? "Choose a saved home from the panel to create a route."
+      : !highlightedPlace
+        ? "Search for a campus or workplace to create a route."
+        : null;
 
   useEffect(() => {
     if (!mapReady) return;
@@ -219,7 +226,7 @@ export default function MapInner({
         )}
       </Map>
 
-      {commuteLine && (
+      {commuteLine ? (
         <button
           type="button"
           className="route-replay"
@@ -228,6 +235,12 @@ export default function MapInner({
         >
           Replay route <span aria-hidden="true">↻</span>
         </button>
+      ) : (
+        <aside className="route-prompt" aria-live="polite">
+          <strong>Route animation</strong>
+          <span>{routePrompt}</span>
+          {savedListings.length === 0 && <Link href="/#listings">Browse homes ↗</Link>}
+        </aside>
       )}
 
       <div className="area-map-legend">

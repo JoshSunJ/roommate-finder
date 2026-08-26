@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import CommuteComparison from "@/components/CommuteComparison";
@@ -230,6 +231,14 @@ export default function MapSelector({ places, savedListings, city }: Props) {
             ))}
           </select>
         </label>
+
+        {visibleSavedListings.length === 0 && (
+          <p className="saved-home-empty">
+            No mapped saved homes in {city.shortLabel}. Save a listing in this city first,
+            then return here to animate its commute.
+            <Link href="/#listings">Browse homes ↗</Link>
+          </p>
+        )}
 
         <fieldset className="commute-mode-picker">
           <legend>How would you travel?</legend>
