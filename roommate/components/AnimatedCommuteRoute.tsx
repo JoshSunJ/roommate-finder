@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Layer, Source } from "react-map-gl/maplibre";
-import type { Feature, LineString, Point } from "geojson";
+import { Layer, Marker, Source } from "react-map-gl/maplibre";
+import type { Feature, LineString } from "geojson";
 
 import {
   sliceRouteAtProgress,
   type RouteCoordinate,
 } from "@/features/commute/animation";
+import type { CommuteMode } from "@/features/preferences/types";
 
 type Props = {
   route: Feature<LineString>;
   isEstimate: boolean;
+  mode: CommuteMode;
 };
 
 const ANIMATION_DURATION_MS = 3200;
@@ -20,7 +22,15 @@ function easeOutCubic(progress: number) {
   return 1 - (1 - progress) ** 3;
 }
 
-export default function AnimatedCommuteRoute({ route, isEstimate }: Props) {
+const modeIcon: Record<CommuteMode, string> = {
+  transit: "🚌",
+  drive: "🚗",
+  bike: "🚲",
+  walk: "🚶",
+  "ride share": "🚕",
+};
+
+export default function AnimatedCommuteRoute({ route, isEstimate, mode }: Props) {
   const [progress, setProgress] = useState(0);
   const coordinates = route.geometry.coordinates as RouteCoordinate[];
 
@@ -55,14 +65,7 @@ export default function AnimatedCommuteRoute({ route, isEstimate }: Props) {
     [coordinates, progress],
   );
   const progressStop = Math.min(0.999999, Math.max(0.000001, progress));
-  const routeHead = useMemo<Feature<Point>>(() => ({
-    type: "Feature",
-    properties: {},
-    geometry: {
-      type: "Point",
-      coordinates: visibleCoordinates.at(-1) ?? coordinates[0],
-    },
-  }), [coordinates, visibleCoordinates]);
+  const routeHead = visibleCoordinates.at(-1) ?? coordinates[0];
 
   return (
     <>
@@ -106,18 +109,9 @@ export default function AnimatedCommuteRoute({ route, isEstimate }: Props) {
         />
       </Source>
 
-      <Source id="commute-route-head" type="geojson" data={routeHead}>
-        <Layer
-          id="commute-route-head-dot"
-          type="circle"
-          paint={{
-            "circle-color": "#d5ff52",
-            "circle-radius": 6,
-            "circle-stroke-color": "#0b0b0a",
-            "circle-stroke-width": 3,
-          }}
-        />
-      </Source>
+      <Marker longitude={routeHead[0]} latitude={routeHead[1]} anchor="center">
+        <span className="route-traveler" aria-hidden="true">{modeIcon[mode]}</span>
+      </Marker>
     </>
   );
 }

@@ -16,6 +16,7 @@ import { mapStyle } from "@/features/map/config";
 import type { CommuteRoute } from "@/features/commute/types";
 import type { Coordinates, Listing } from "@/features/listings/types";
 import type { Place } from "@/features/places/types";
+import type { CommuteMode } from "@/features/preferences/types";
 
 type Props = {
   places: Place[];
@@ -25,6 +26,7 @@ type Props = {
   onSelectSavedHome: (listingId: number) => void;
   focusCoordinates: Coordinates;
   roadRoute: CommuteRoute | null;
+  displayedMode: CommuteMode;
 };
 
 type SelectedMarker =
@@ -40,6 +42,7 @@ export default function MapInner({
   onSelectSavedHome,
   focusCoordinates,
   roadRoute,
+  displayedMode,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -82,7 +85,7 @@ export default function MapInner({
       commuteLine.properties?.source,
       selectedHomeId,
       highlightedPlaceId,
-      roadRoute?.mode ?? "estimate",
+      displayedMode,
       commuteLine.geometry.coordinates.length,
       routeReplay,
     ].join(":")
@@ -137,6 +140,7 @@ export default function MapInner({
             key={routeAnimationKey}
             route={commuteLine}
             isEstimate={!roadRoute}
+            mode={displayedMode}
           />
         )}
 
@@ -233,7 +237,7 @@ export default function MapInner({
           onClick={() => setRouteReplay((currentReplay) => currentReplay + 1)}
           aria-label="Replay commute route animation"
         >
-          Replay route <span aria-hidden="true">↻</span>
+          Replay {displayedMode} {roadRoute ? "route" : "estimate"} <span aria-hidden="true">↻</span>
         </button>
       ) : (
         <aside className="route-prompt" aria-live="polite">
@@ -249,7 +253,7 @@ export default function MapInner({
         {commuteLine && (
           <span>
             <i className="legend-route" />
-            {roadRoute ? `${roadRoute.mode} route` : "Planning path"}
+            {roadRoute ? `${displayedMode} road route` : `${displayedMode} estimate`}
           </span>
         )}
       </div>

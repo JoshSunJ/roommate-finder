@@ -50,6 +50,7 @@ export default function MapSelector({ places, savedListings, city }: Props) {
     city.id === defaultCity.id && initialCampus ? placeAsSearchResult(initialCampus) : null,
   );
   const [selectedModes, setSelectedModes] = useState<CommuteMode[]>(["transit", "bike"]);
+  const [displayedMode, setDisplayedMode] = useState<CommuteMode>("bike");
   const [maxCommuteMinutes, setMaxCommuteMinutes] = useState(30);
   const [roadRouteResult, setRoadRouteResult] = useState<RoadRouteResult>({
     requestKey: "",
@@ -114,9 +115,7 @@ export default function MapSelector({ places, savedListings, city }: Props) {
     && routeRequestKey !== roadRouteResult.requestKey;
   const routesUnavailable = routeRequestKey === roadRouteResult.requestKey
     && roadRouteResult.unavailable;
-  const displayedRoadRoute = selectedModes
-    .map((mode) => roadRoutes.find((route) => route.mode === mode))
-    .find((route): route is CommuteRoute => Boolean(route)) ?? null;
+  const displayedRoadRoute = roadRoutes.find((route) => route.mode === displayedMode) ?? null;
 
   useEffect(() => {
     if (!routeRequestKey || !selectedHome?.coordinates || !selectedDestination) return;
@@ -147,11 +146,13 @@ export default function MapSelector({ places, savedListings, city }: Props) {
   }, [routeRequestKey, selectedDestination, selectedHome, selectedModes]);
 
   function toggleMode(mode: CommuteMode) {
-    setSelectedModes((current) =>
-      current.includes(mode)
-        ? current.length > 1 ? current.filter((item) => item !== mode) : current
-        : [...current, mode],
-    );
+    if (selectedModes.includes(mode) && selectedModes.length === 1) return;
+    const nextModes = selectedModes.includes(mode)
+      ? selectedModes.filter((item) => item !== mode)
+      : [...selectedModes, mode];
+
+    setSelectedModes(nextModes);
+    if (!nextModes.includes(displayedMode)) setDisplayedMode(nextModes[0]);
   }
 
   function changeAudience(option: "student" | "intern") {
@@ -160,7 +161,11 @@ export default function MapSelector({ places, savedListings, city }: Props) {
       option === "student" ? place.category === "Campus" : place.category === "Company",
     );
     setSelectedDestination(isStarterCity && nextDestination ? placeAsSearchResult(nextDestination) : null);
-    setSelectedModes(option === "student" ? ["transit", "bike"] : ["transit", "drive"]);
+    const nextModes: CommuteMode[] = option === "student"
+      ? ["transit", "bike"]
+      : ["transit", "drive"];
+    setSelectedModes(nextModes);
+    setDisplayedMode(option === "student" ? "bike" : "drive");
   }
 
   return (
@@ -257,6 +262,24 @@ export default function MapSelector({ places, savedListings, city }: Props) {
           </div>
         </fieldset>
 
+        <fieldset className="map-route-mode-picker">
+          <legend>Route shown on map</legend>
+          <div>
+            {selectedModes.map((mode) => (
+              <button
+                type="button"
+                key={mode}
+                className={displayedMode === mode ? "is-active" : ""}
+                aria-pressed={displayedMode === mode}
+                onClick={() => setDisplayedMode(mode)}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+          <small>Comparison uses every selected mode; the map visualizes this one.</small>
+        </fieldset>
+
         <label className="commute-limit" htmlFor="commute-limit">
           <span>Maximum commute <strong>{maxCommuteMinutes} min</strong></span>
           <input
@@ -312,6 +335,7 @@ export default function MapSelector({ places, savedListings, city }: Props) {
         onSelectSavedHome={setSelectedHomeId}
         focusCoordinates={selectedDestination?.coordinates ?? city.coordinates}
         roadRoute={displayedRoadRoute}
+        displayedMode={displayedMode}
       />
     </section>
   );
