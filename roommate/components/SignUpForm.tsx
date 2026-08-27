@@ -8,6 +8,7 @@ export default function SignUpForm() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationPreviewUrl, setVerificationPreviewUrl] = useState("");
 
   async function handleSubmit(formData: FormData) {
     setError("");
@@ -29,7 +30,25 @@ export default function SignUpForm() {
       return;
     }
 
-    router.push("/sign-in?registered=1");
+    const result = await response.json();
+    if (result.verificationPreviewUrl) {
+      setVerificationPreviewUrl(result.verificationPreviewUrl);
+      setIsSubmitting(false);
+      return;
+    }
+    router.push(result.emailDeliveryUnavailable
+      ? "/verify-email?delivery=unavailable"
+      : "/verify-email?sent=1");
+  }
+
+  if (verificationPreviewUrl) {
+    return (
+      <section className="auth-form auth-form--success" aria-live="polite">
+        <h2>Account created.</h2>
+        <p>Production sends an email. Local preview mode gives you the link directly.</p>
+        <Link href={verificationPreviewUrl}>Verify development account ↗</Link>
+      </section>
+    );
   }
 
   return (

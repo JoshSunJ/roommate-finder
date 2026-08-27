@@ -110,6 +110,9 @@ DIRECT_DATABASE_URL
 AUTH_SECRET
 AUTH_URL
 ADMIN_EMAIL
+EMAIL_PROVIDER=resend
+RESEND_API_KEY
+EMAIL_FROM
 MAPTILER_API_KEY
 PHOTO_STORAGE_DRIVER=s3
 S3_BUCKET
@@ -162,6 +165,36 @@ normal production build pass. CI proves the image can be assembled; it does not
 automatically deploy or merge a pull request. Production promotion remains an
 explicit reviewed action until a hosting provider and its credentials are
 configured.
+
+## Account email verification
+
+New accounts must prove ownership of their email address before signing in.
+Unitern stores only a SHA-256 token hash, expires links after 24 hours, and
+deletes a token after it is used. Accounts created before this migration are
+backfilled as verified so the release does not lock out existing users.
+
+Local development defaults to `EMAIL_PROVIDER=preview`. After signup, the UI
+shows the verification link directly; the raw token is not written to logs.
+
+Production uses Resend's server-side HTTPS API. Configure these encrypted
+deployment variables:
+
+ ```text
+ AUTH_URL=https://your-production-hostname
+ EMAIL_PROVIDER=resend
+ RESEND_API_KEY=re_...
+EMAIL_FROM=Unitern <accounts@your-verified-domain>
+```
+
+Never prefix `RESEND_API_KEY` with `NEXT_PUBLIC_`. Before deployment, run:
+
+```bash
+npm run email:validate:production
+```
+
+Resend requires the `EMAIL_FROM` domain to be verified. The registration route
+ uses an idempotency key so a retried provider request does not produce duplicate
+ verification messages.
 
 ## Photo storage
 

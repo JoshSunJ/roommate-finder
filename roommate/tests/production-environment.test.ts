@@ -12,6 +12,9 @@ const validEnvironment = {
   AUTH_SECRET: "c8b5f88fdf014187bd7d69c35361dd8f",
   AUTH_URL: "https://unitern.example",
   ADMIN_EMAIL: "moderator@unitern.example",
+  EMAIL_PROVIDER: "resend",
+  RESEND_API_KEY: "test-resend-key",
+  EMAIL_FROM: "Unitern <accounts@unitern.example>",
   PHOTO_STORAGE_DRIVER: "s3",
   S3_BUCKET: "unitern-photos",
   S3_REGION: "auto",
@@ -30,8 +33,9 @@ test("a complete production environment returns only safe operational metadata",
   assert.equal(summary.adminEmailDomain, "unitern.example");
   assert.equal(summary.database.runtime.host, "pooler.example.com");
   assert.equal(summary.photoStorage, "s3");
+  assert.equal(summary.emailProvider, "resend");
   assert.equal(summary.roadRoutingConfigured, true);
-  assert.doesNotMatch(JSON.stringify(summary), /secret|test-maptiler-key|test-routing-token/);
+  assert.doesNotMatch(JSON.stringify(summary), /secret|test-maptiler-key|test-routing-token|test-resend-key/);
 });
 
 test("production validation rejects placeholders, insecure URLs, and local storage", () => {

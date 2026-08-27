@@ -17,8 +17,8 @@ async function main() {
   await prisma.listing.deleteMany();
   const demoUser = await prisma.user.upsert({
     where: { email: "joshua@roommate-finder.local" },
-    update: { name: "Joshua" },
-    create: { name: "Joshua", email: "joshua@roommate-finder.local" },
+    update: { name: "Joshua", emailVerifiedAt: new Date() },
+    create: { name: "Joshua", email: "joshua@roommate-finder.local", emailVerifiedAt: new Date() },
   });
 
   await prisma.listing.createMany({
