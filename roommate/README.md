@@ -78,6 +78,91 @@ data and is intentionally a local-development tool.
 The health endpoint exposes only `reachable` or `unreachable`; it never returns
 the database hostname, credentials, query error, or provider response.
 
+## Production runtime
+
+Unitern ships as a portable Next.js standalone container. This keeps the
+application independent from one cloud vendor: the same image can run behind a
+managed HTTPS load balancer on AWS App Runner/ECS, Google Cloud Run, Fly.io,
+Railway, or a comparable container platform.
+
+The release has two deliberately separate phases:
+
+```text
+Release runner                       Application runtime
+npm ci                               node server.js
+deploy:validate                      serves HTTP traffic
+db:deploy                            has no Prisma migration CLI
+```
+
+Database migrations are not run from the container startup command. If several
+instances start together, automatic startup migrations can race one another and
+mix schema changes with normal application availability. Apply migrations once
+from a trusted release runner before promoting the new image.
+
+### Required production configuration
+
+Set these as encrypted runtime secrets or configuration values on the hosting
+platform:
+
+```text
+DATABASE_URL
+DIRECT_DATABASE_URL
+AUTH_SECRET
+AUTH_URL
+ADMIN_EMAIL
+MAPTILER_API_KEY
+PHOTO_STORAGE_DRIVER=s3
+S3_BUCKET
+S3_REGION
+S3_ENDPOINT                 # custom S3-compatible services such as R2
+S3_ACCESS_KEY_ID            # omit both key values only when using an IAM role
+S3_SECRET_ACCESS_KEY
+PHOTO_PUBLIC_BASE_URL
+```
+
+`AUTH_URL`, `PHOTO_PUBLIC_BASE_URL`, and a custom `S3_ENDPOINT` must use HTTPS.
+The database URLs must point to hosted PostgreSQL and require TLS. Run this
+before every production migration:
+
+```bash
+npm ci
+npm run deploy:validate
+npm run db:deploy
+```
+
+The validator fails closed on placeholder authentication secrets, local or
+unencrypted databases, ephemeral photo storage, incomplete S3 credentials, and
+missing location-search configuration. It prints only safe operational metadata
+and never echoes secret values.
+
+### Build and run the container
+
+`NEXT_PUBLIC_` variables are intentionally public and are embedded into the
+browser bundle at build time. Pass the restricted MapTiler browser key while
+building the image:
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_MAPTILER_KEY="your-domain-restricted-public-key" \
+  --tag unitern:release .
+```
+
+Supply the server-only variables through the hosting platform when the image
+runs. Do not bake `.env` into the image. The container:
+
+- runs as an unprivileged Linux user;
+- starts Next.js's traced standalone server;
+- validates the production environment before accepting requests;
+- exposes port 3000;
+- reports container health through `/api/health`;
+- includes `sharp` for production image optimization.
+
+GitHub CI builds the deployment image after tests, lint, migrations, and the
+normal production build pass. CI proves the image can be assembled; it does not
+automatically deploy or merge a pull request. Production promotion remains an
+explicit reviewed action until a hosting provider and its credentials are
+configured.
+
 ## Photo storage
 
 Local development uses `PHOTO_STORAGE_DRIVER=local` and writes listing photos
