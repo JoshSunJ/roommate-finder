@@ -1,6 +1,10 @@
 import type { NextRequest } from "next/server";
 
-import { getRoadRoutes } from "@/features/commute/routing";
+import {
+  getOpenRouteServiceRoutes,
+  getRoadRoutes,
+  getValhallaRoutes,
+} from "@/features/commute/routing";
 import {
   isRoadRoutableMode,
   type RoadRoutableMode,
@@ -48,16 +52,36 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const accessToken = process.env.MAPBOX_ACCESS_TOKEN?.trim();
-  if (!accessToken) {
+  const openRouteServiceKey = process.env.OPENROUTESERVICE_API_KEY?.trim();
+  const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN?.trim();
+  const valhallaUrl = process.env.VALHALLA_BASE_URL?.trim();
+
+  if (!openRouteServiceKey && !mapboxAccessToken && !valhallaUrl) {
     return Response.json(
-      { error: "Live road routing is not configured." },
+      { error: "Road routing is not configured for this environment." },
       { status: 503 },
     );
   }
 
   try {
-    const routes = await getRoadRoutes(origin, destination, modes, accessToken);
+    let routes;
+    if (openRouteServiceKey) {
+      routes = await getOpenRouteServiceRoutes(
+        origin,
+        destination,
+        modes,
+        openRouteServiceKey,
+      );
+    } else if (mapboxAccessToken) {
+      routes = await getRoadRoutes(origin, destination, modes, mapboxAccessToken);
+    } else if (valhallaUrl) {
+      routes = await getValhallaRoutes(origin, destination, modes, valhallaUrl);
+    } else {
+      return Response.json(
+        { error: "Road routing is not configured for this environment." },
+        { status: 503 },
+      );
+    }
     return Response.json(
       { routes },
       { headers: { "Cache-Control": "no-store" } },

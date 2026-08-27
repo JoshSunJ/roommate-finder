@@ -28,6 +28,8 @@ type Props = {
   focusCoordinates: Coordinates;
   roadRoute: CommuteRoute | null;
   displayedMode: CommuteMode;
+  routeLoading: boolean;
+  routeUnavailable: boolean;
 };
 
 type SelectedMarker =
@@ -44,6 +46,8 @@ export default function MapInner({
   focusCoordinates,
   roadRoute,
   displayedMode,
+  routeLoading,
+  routeUnavailable,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -64,22 +68,12 @@ export default function MapInner({
     ? undefined
     : savedListings.find((listing) => listing.id === selectedHomeId);
   const commuteLine = useMemo<Feature<LineString> | null>(() => {
-    if (!commuteHome?.coordinates || !highlightedPlace) return null;
+    if (!commuteHome?.coordinates || !highlightedPlace || !roadRoute) return null;
 
-    return roadRoute ? {
+    return {
       type: "Feature" as const,
       properties: { source: "road-route" },
       geometry: roadRoute.geometry,
-    } : {
-      type: "Feature" as const,
-      properties: { source: "estimate" },
-      geometry: {
-        type: "LineString" as const,
-        coordinates: [
-          [commuteHome.coordinates.longitude, commuteHome.coordinates.latitude],
-          [highlightedPlace.coordinates.longitude, highlightedPlace.coordinates.latitude],
-        ],
-      },
     };
   }, [commuteHome, highlightedPlace, roadRoute]);
   const routeAnimationKey = commuteLine
@@ -98,7 +92,13 @@ export default function MapInner({
       ? "Choose a saved home from the panel to create a route."
       : !highlightedPlace
         ? "Search for a campus or workplace to create a route."
-        : null;
+        : displayedMode === "transit"
+          ? "Schedule-aware transit routing is not connected yet. Choose drive, bike, walk, or ride share for a street route."
+          : routeLoading
+            ? `Calculating the ${displayedMode} route over real streets…`
+            : routeUnavailable
+              ? `The ${displayedMode} routing service is unavailable. No fake straight-line route is shown.`
+              : "Choose a supported travel mode to calculate a route.";
 
   useEffect(() => {
     if (!mapReady) return;
@@ -148,7 +148,7 @@ export default function MapInner({
             key={routeAnimationKey}
             map={nativeMap}
             route={commuteLine}
-            isEstimate={!roadRoute}
+            isEstimate={false}
             mode={displayedMode}
             replayRequested={routeReplay > 0}
           />
@@ -247,7 +247,7 @@ export default function MapInner({
           onClick={() => setRouteReplay((currentReplay) => currentReplay + 1)}
           aria-label="Replay commute route animation"
         >
-          Replay {displayedMode} {roadRoute ? "route" : "estimate"} <span aria-hidden="true">↻</span>
+          Replay {displayedMode} route <span aria-hidden="true">↻</span>
         </button>
       ) : (
         <aside className="route-prompt" aria-live="polite">
@@ -263,7 +263,7 @@ export default function MapInner({
         {commuteLine && (
           <span>
             <i className="legend-route" />
-            {roadRoute ? `${displayedMode} road route` : `${displayedMode} estimate`}
+            {displayedMode} road route
           </span>
         )}
       </div>

@@ -8,7 +8,10 @@ import LocationMap from "@/components/LocationMap";
 import LocationSearch from "@/components/LocationSearch";
 import { requestRoadRoutes } from "@/features/commute/client";
 import { compareCommuteModes } from "@/features/commute/service";
-import type { CommuteRoute } from "@/features/commute/types";
+import {
+  isRoadRoutableMode,
+  type CommuteRoute,
+} from "@/features/commute/types";
 import type { Listing } from "@/features/listings/types";
 import {
   defaultCity,
@@ -99,13 +102,15 @@ export default function MapSelector({ places, savedListings, city }: Props) {
       : [],
     [maxCommuteMinutes, selectedDestination, selectedHome, selectedModes],
   );
-  const routeRequestKey = selectedHome?.coordinates && selectedDestination
+  const routeRequestKey = selectedHome?.coordinates
+    && selectedDestination
+    && isRoadRoutableMode(displayedMode)
     ? [
       selectedHome.coordinates.longitude,
       selectedHome.coordinates.latitude,
       selectedDestination.coordinates.longitude,
       selectedDestination.coordinates.latitude,
-      selectedModes.join(","),
+      displayedMode,
     ].join("|")
     : null;
   const roadRoutes = routeRequestKey === roadRouteResult.requestKey
@@ -125,7 +130,7 @@ export default function MapSelector({ places, savedListings, city }: Props) {
     requestRoadRoutes({
       origin: selectedHome.coordinates,
       destination: selectedDestination.coordinates,
-      modes: selectedModes,
+      modes: [displayedMode],
       signal: abortController.signal,
     })
       .then((routes) => setRoadRouteResult({
@@ -143,7 +148,7 @@ export default function MapSelector({ places, savedListings, city }: Props) {
       });
 
     return () => abortController.abort();
-  }, [routeRequestKey, selectedDestination, selectedHome, selectedModes]);
+  }, [displayedMode, routeRequestKey, selectedDestination, selectedHome]);
 
   function toggleMode(mode: CommuteMode) {
     if (selectedModes.includes(mode) && selectedModes.length === 1) return;
@@ -336,6 +341,8 @@ export default function MapSelector({ places, savedListings, city }: Props) {
         focusCoordinates={selectedDestination?.coordinates ?? city.coordinates}
         roadRoute={displayedRoadRoute}
         displayedMode={displayedMode}
+        routeLoading={routesLoading}
+        routeUnavailable={routesUnavailable}
       />
     </section>
   );

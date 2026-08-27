@@ -17,8 +17,10 @@ type Props = {
   focusCoordinates: Coordinates;
   roadRoute: CommuteRoute | null;
   displayedMode: CommuteMode;
+  routeLoading: boolean;
+  routeUnavailable: boolean;
 };
 
-export default function LocationMap({ places, highlightedPlaceId, savedListings, selectedHomeId, onSelectSavedHome, focusCoordinates, roadRoute, displayedMode }: Props) {
-  return <MapInner places={places} highlightedPlaceId={highlightedPlaceId} savedListings={savedListings} selectedHomeId={selectedHomeId} onSelectSavedHome={onSelectSavedHome} focusCoordinates={focusCoordinates} roadRoute={roadRoute} displayedMode={displayedMode} />;
+export default function LocationMap({ places, highlightedPlaceId, savedListings, selectedHomeId, onSelectSavedHome, focusCoordinates, roadRoute, displayedMode, routeLoading, routeUnavailable }: Props) {
+  return <MapInner places={places} highlightedPlaceId={highlightedPlaceId} savedListings={savedListings} selectedHomeId={selectedHomeId} onSelectSavedHome={onSelectSavedHome} focusCoordinates={focusCoordinates} roadRoute={roadRoute} displayedMode={displayedMode} routeLoading={routeLoading} routeUnavailable={routeUnavailable} />;
 }

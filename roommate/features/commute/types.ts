@@ -18,7 +18,7 @@ export type CommuteRoute = {
     type: "LineString";
     coordinates: [number, number][];
   };
-  provider: "mapbox";
+  provider: "mapbox" | "openrouteservice" | "valhalla";
 };
 
 const roadRoutableModes = new Set<string>([
