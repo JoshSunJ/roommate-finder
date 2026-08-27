@@ -7,6 +7,13 @@ type VerificationMessage = {
   idempotencyKey: string;
 };
 
+type PasswordResetMessage = {
+  recipient: string;
+  name: string;
+  token: string;
+  idempotencyKey: string;
+};
+
 export type EmailDeliveryResult = {
   provider: "preview" | "resend";
   previewUrl?: string;
@@ -68,6 +75,12 @@ export function buildEmailVerificationUrl(token: string, environment: Environmen
   return url.toString();
 }
 
+export function buildPasswordResetUrl(token: string, environment: Environment = process.env) {
+  const url = new URL("/reset-password", appUrl(environment));
+  url.searchParams.set("token", token);
+  return url.toString();
+}
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;",
@@ -110,6 +123,44 @@ export async function sendEmailVerification(
 
   if (!response.ok) {
     throw new Error("The verification email provider rejected the request.");
+  }
+
+  return { provider: "resend" };
+}
+
+export async function sendPasswordReset(
+  message: PasswordResetMessage,
+  environment: Environment = process.env,
+  fetchImplementation: typeof fetch = fetch,
+): Promise<EmailDeliveryResult> {
+  const resetUrl = buildPasswordResetUrl(message.token, environment);
+  const configuration = validateEmailDeliveryConfiguration(environment);
+
+  if (configuration.provider === "preview") {
+    return { provider: "preview", previewUrl: resetUrl };
+  }
+
+  const safeName = escapeHtml(message.name);
+  const safeUrl = escapeHtml(resetUrl);
+  const response = await fetchImplementation("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${configuration.apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": message.idempotencyKey,
+      "User-Agent": "Unitern/1.0",
+    },
+    body: JSON.stringify({
+      from: configuration.sender,
+      to: [message.recipient],
+      subject: "Reset your Unitern password",
+      text: `Hi ${message.name}, reset your Unitern password within 1 hour: ${resetUrl}`,
+      html: `<p>Hi ${safeName},</p><p>Reset your Unitern password within 1 hour.</p><p><a href="${safeUrl}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("The password-reset email provider rejected the request.");
   }
 
   return { provider: "resend" };
