@@ -8,6 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test tests/*.test.ts",
+    "test:integration": "tsx --test tests/integration/*.test.ts",
+    "test:e2e": "playwright test",
+    "smoke:production": "tsx scripts/smoke-production.ts",
+    "release:check": "npm run lint && npm test && npm run test:integration && npm run test:e2e && npm run build",
+    "security:prune-rate-limits": "tsx scripts/prune-rate-limits.ts",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "db:generate": "prisma generate",
@@ -39,6 +44,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/geojson": "^7946.0.16",
@@ -52,5 +58,16 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.0",
+    "fast-uri": "3.1.5",
+    "js-yaml": "4.3.1",
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.18"
+    },
+    "minimatch@10.2.5": {
+      "brace-expansion": "5.0.9"
+    }
   }
 }

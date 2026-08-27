@@ -83,6 +83,7 @@ test("resend delivery keeps credentials server-side and sends an idempotent requ
   );
 
   assert.equal(result.provider, "resend");
+  assert.equal(result.providerMessageId, "email-1");
   assert.equal(request?.url, "https://api.resend.com/emails");
   assert.equal(request?.headers.get("authorization"), "Bearer server-secret");
   assert.equal(request?.headers.get("idempotency-key"), "verification-1");

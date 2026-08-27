@@ -17,6 +17,7 @@ type PasswordResetMessage = {
 export type EmailDeliveryResult = {
   provider: "preview" | "resend";
   previewUrl?: string;
+  providerMessageId?: string;
 };
 
 export class EmailDeliveryConfigurationError extends Error {
@@ -24,6 +25,32 @@ export class EmailDeliveryConfigurationError extends Error {
     super(message);
     this.name = "EmailDeliveryConfigurationError";
   }
+}
+
+export class EmailDeliveryError extends Error {
+  readonly status: number;
+  readonly requestId?: string;
+
+  constructor(status: number, requestId?: string) {
+    super("The email provider rejected the request.");
+    this.name = "EmailDeliveryError";
+    this.status = status;
+    this.requestId = requestId;
+  }
+}
+
+export function emailDeliveryFailureAttributes(error: unknown) {
+  if (error instanceof EmailDeliveryError) {
+    return {
+      errorType: error.name,
+      providerStatus: error.status,
+      providerRequestId: error.requestId,
+    };
+  }
+  if (error instanceof EmailDeliveryConfigurationError) {
+    return { errorType: error.name };
+  }
+  return { errorType: "UnexpectedEmailDeliveryError" };
 }
 
 type EmailDeliveryConfiguration =
@@ -122,10 +149,17 @@ export async function sendEmailVerification(
   });
 
   if (!response.ok) {
-    throw new Error("The verification email provider rejected the request.");
+    throw new EmailDeliveryError(
+      response.status,
+      response.headers.get("x-request-id") ?? undefined,
+    );
   }
 
-  return { provider: "resend" };
+  const payload = await response.json().catch(() => null) as { id?: unknown } | null;
+  return {
+    provider: "resend",
+    ...(typeof payload?.id === "string" ? { providerMessageId: payload.id } : {}),
+  };
 }
 
 export async function sendPasswordReset(
@@ -160,8 +194,15 @@ export async function sendPasswordReset(
   });
 
   if (!response.ok) {
-    throw new Error("The password-reset email provider rejected the request.");
+    throw new EmailDeliveryError(
+      response.status,
+      response.headers.get("x-request-id") ?? undefined,
+    );
   }
 
-  return { provider: "resend" };
+  const payload = await response.json().catch(() => null) as { id?: unknown } | null;
+  return {
+    provider: "resend",
+    ...(typeof payload?.id === "string" ? { providerMessageId: payload.id } : {}),
+  };
 }

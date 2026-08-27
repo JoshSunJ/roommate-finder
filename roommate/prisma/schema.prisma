@@ -60,6 +60,17 @@ model PasswordResetToken {
   @@index([expiresAt])
 }
 
+// Fixed-window counters shared by every application instance. Keys contain
+// only SHA-256 digests, never raw email addresses or IP addresses.
+model RateLimitBucket {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
 model Listing {
   id                Int            @id @default(autoincrement())
   title             String

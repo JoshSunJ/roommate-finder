@@ -3,10 +3,17 @@ import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import {
+  emailDeliveryFailureAttributes,
   sendEmailVerification,
   validateEmailDeliveryConfiguration,
 } from "@/features/account-email/delivery";
 import { issueEmailVerification } from "@/features/account-email/service";
+import {
+  enforceRateLimit,
+  rateLimitResponse,
+  requestNetworkIdentifier,
+} from "@/features/security/rate-limit";
+import { logOperationalError, logOperationalInfo } from "@/lib/operational-log";
 
 const registrationSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -16,7 +23,7 @@ const registrationSchema = z.object({
 
 export async function POST(request: Request) {
   validateEmailDeliveryConfiguration();
-  const parsed = registrationSchema.safeParse(await request.json());
+  const parsed = registrationSchema.safeParse(await request.json().catch(() => null));
 
   if (!parsed.success) {
     return Response.json(
@@ -26,6 +33,19 @@ export async function POST(request: Request) {
   }
 
   const email = parsed.data.email.toLowerCase();
+  const [networkLimit, emailLimit] = await Promise.all([
+    enforceRateLimit(
+      { scope: "register-network", limit: 10, windowMs: 60 * 60 * 1000 },
+      requestNetworkIdentifier(request),
+    ),
+    enforceRateLimit(
+      { scope: "register-email", limit: 3, windowMs: 60 * 60 * 1000 },
+      email,
+    ),
+  ]);
+  if (!networkLimit.allowed) return rateLimitResponse(networkLimit);
+  if (!emailLimit.allowed) return rateLimitResponse(emailLimit);
+
   const existingUser = await prisma.user.findUnique({ where: { email } });
 
   if (existingUser) {
@@ -49,7 +69,18 @@ export async function POST(request: Request) {
       token: verification.token,
       idempotencyKey: `email-verification-${verification.id}`,
     });
-  } catch {
+    logOperationalInfo("email.verification.accepted", {
+      userId: user.id,
+      provider: delivery.provider,
+      providerMessageId: delivery.providerMessageId,
+      source: "registration",
+    });
+  } catch (error) {
+    logOperationalError("email.verification.failed", {
+      userId: user.id,
+      source: "registration",
+      ...emailDeliveryFailureAttributes(error),
+    });
     return Response.json({
       id: user.id,
       requiresEmailVerification: true,
