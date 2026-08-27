@@ -13,6 +13,7 @@ model User {
   email                   String                @unique
   emailVerifiedAt         DateTime?
   passwordHash            String?
+  sessionVersion          Int                   @default(0)
   affiliationType         String?
   affiliationName         String?
   verificationStatus      String                @default("unverified")
@@ -31,6 +32,7 @@ model User {
   blocksCreated           UserBlock[]           @relation("Blocker")
   blocksReceived          UserBlock[]           @relation("Blocked")
   emailVerificationTokens EmailVerificationToken[]
+  passwordResetToken      PasswordResetToken?
 }
 
 model EmailVerificationToken {
@@ -43,6 +45,18 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    Int      @unique
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([expiresAt])
 }
 

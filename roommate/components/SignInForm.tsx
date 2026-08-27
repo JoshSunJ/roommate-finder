@@ -36,6 +36,7 @@ export default function SignInForm() {
       <label>Password<input name="password" type="password" autoComplete="current-password" required /></label>
       {error && <p className="form-error">{error}</p>}
       <button type="submit" disabled={isSubmitting}>{isSubmitting ? "Signing in…" : "Sign in"}</button>
+      <p><Link href="/forgot-password">Forgot your password?</Link></p>
       <p>New here? <Link href="/sign-up">Create an account</Link>.</p>
       <p>Need another link? <Link href="/verify-email">Verify your email</Link>.</p>
     </form>
