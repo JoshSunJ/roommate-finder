@@ -1,0 +1,12 @@
+.git
+.github
+.next
+node_modules
+notes
+tests
+coverage
+.env
+.env.*
+npm-debug.log*
+public/uploads/listings/*
+!public/uploads/listings/.gitkeep

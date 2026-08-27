@@ -15,6 +15,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
     "db:validate:production": "tsx scripts/validate-production-database.ts",
+    "deploy:validate": "tsx scripts/validate-production-environment.ts",
     "db:release": "npm run db:validate:production && npm run db:deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
@@ -33,6 +34,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-map-gl": "^8.1.2",
+    "sharp": "^0.35.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {
