@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 import { resetPasswordWithToken } from "@/features/password-reset/service";
+import {
+  enforceRateLimit,
+  rateLimitResponse,
+  requestNetworkIdentifier,
+} from "@/features/security/rate-limit";
 
 const resetSchema = z.object({
   token: z.string().min(32).max(256),
@@ -8,6 +13,12 @@ const resetSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const networkLimit = await enforceRateLimit(
+    { scope: "password-reset-consume", limit: 10, windowMs: 15 * 60 * 1000 },
+    requestNetworkIdentifier(request),
+  );
+  if (!networkLimit.allowed) return rateLimitResponse(networkLimit);
+
   const parsed = resetSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return Response.json(

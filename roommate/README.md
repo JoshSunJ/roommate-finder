@@ -174,7 +174,9 @@ deletes a token after it is used. Accounts created before this migration are
 backfilled as verified so the release does not lock out existing users.
 
 Local development defaults to `EMAIL_PROVIDER=preview`. After signup, the UI
-shows the verification link directly; the raw token is not written to logs.
+shows the verification link directly. Unitern's structured application logs do
+not include the raw token. Production proxy and access logs must also redact
+query strings on verification and password-reset URLs.
 
 Production uses Resend's server-side HTTPS API. Configure these encrypted
 deployment variables:
@@ -222,3 +224,96 @@ PHOTO_PUBLIC_BASE_URL
 The bucket must permit public reads through `PHOTO_PUBLIC_BASE_URL`, but write
 credentials remain server-only. Never prefix storage credentials with
 `NEXT_PUBLIC_`.
+
+## Release confidence and production operations
+
+Production readiness is a chain of evidence, not a single successful browser
+refresh. Unitern checks the system at five different boundaries:
+
+```text
+Unit tests          -> pure rules such as tokens, email payloads, and rate-limit responses
+Integration tests   -> Prisma, PostgreSQL constraints, token replay, and atomic counters
+Browser tests       -> signup, verification, sign-in, reset, and listing CRUD as a user
+Production build    -> Next.js can compile and package the deployable application
+Smoke tests         -> the deployed URL, security headers, pages, and database health work
+```
+
+Run the complete pre-merge gate locally with:
+
+```bash
+npm run release:check
+```
+
+CI repeats the same important boundaries on GitHub with clean dependencies and
+fresh PostgreSQL databases. A green workflow makes a pull request eligible for
+review; it does not automatically approve or merge the pull request.
+
+After deploying to staging or production, validate the running system itself:
+
+```bash
+SMOKE_BASE_URL=https://staging.example.com npm run smoke:production
+```
+
+The smoke test intentionally uses read-only requests. It verifies the main
+public pages, the security headers, and `/api/health` without creating users or
+listings in production.
+
+### Email delivery diagnosis
+
+Authentication routes emit structured JSON events such as:
+
+```text
+email.verification.accepted
+email.verification.failed
+email.password_reset.accepted
+email.password_reset.failed
+```
+
+Successful Resend calls include the provider message ID. Failures include only
+safe diagnostic fields such as provider status and provider request ID; email
+addresses, reset tokens, passwords, and API keys are never logged. In
+production, search the hosting platform logs by event name and then use the
+provider message ID in the Resend dashboard to distinguish application failure,
+provider rejection, and downstream inbox delivery problems.
+
+`EMAIL_PROVIDER=preview` never sends real mail. Production email requires
+`EMAIL_PROVIDER=resend`, a valid `RESEND_API_KEY`, an HTTPS `AUTH_URL`, and an
+`EMAIL_FROM` address on a domain verified by Resend. Run
+`npm run email:validate:production` before promotion and test one real mailbox in
+staging before accepting users.
+
+### Abuse protection and retention
+
+Signup, sign-in, resend, forgotten-password, and reset endpoints share atomic
+PostgreSQL rate-limit buckets. Keys are SHA-256 hashes, so raw email addresses
+and network identifiers are not stored in the limiter table. Because every app
+instance uses the same database, scaling horizontally does not reset limits or
+create separate per-server counters.
+
+Schedule this command once per day in the hosting platform's job scheduler:
+
+```bash
+npm run security:prune-rate-limits
+```
+
+It removes counters that expired more than 24 hours ago. The production reverse
+proxy must overwrite, rather than append untrusted client values to,
+`X-Forwarded-For`; otherwise no application-level IP limiter can reliably know
+which address supplied the header.
+
+### Promotion checklist
+
+1. Open a focused pull request and require the CI workflow to pass.
+2. Review schema migrations, authorization changes, and environment-variable changes.
+3. Run `npm run deploy:validate` with staging secrets.
+4. Apply reviewed migrations once with `npm run db:release`.
+5. Deploy the immutable container image to staging.
+6. Run `SMOKE_BASE_URL=<staging-url> npm run smoke:production`.
+7. Manually test one real signup email, password reset, photo upload, and map search.
+8. Promote the same image to production, run smoke checks again, and monitor errors.
+
+Code can be release-ready before infrastructure is provisioned. The application
+is not operationally production-ready until managed PostgreSQL backups and TLS,
+real Resend credentials and a verified sender domain, durable S3-compatible
+photo storage, restricted MapTiler keys, HTTPS hosting, monitoring, and a tested
+rollback procedure all exist outside the repository.

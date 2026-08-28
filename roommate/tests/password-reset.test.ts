@@ -60,6 +60,7 @@ test("production password-reset email is server-authenticated and idempotent", a
   );
 
   assert.equal(result.provider, "resend");
+  assert.equal(result.providerMessageId, "email-2");
   assert.equal(request?.url, "https://api.resend.com/emails");
   assert.equal(request?.headers.get("authorization"), "Bearer server-secret");
   assert.equal(request?.headers.get("idempotency-key"), "reset-2");

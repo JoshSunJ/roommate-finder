@@ -56,6 +56,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Audit production and development dependencies
+        run: npm audit --audit-level=high
+
       - name: Rebuild schema from committed migrations
         run: npm run db:deploy
 
@@ -65,15 +68,73 @@ jobs:
       - name: Run unit tests
         run: npm test
 
+      - name: Run database integration tests
+        run: npm run test:integration
+
       - name: Run lint checks
         run: npm run lint
 
       - name: Create production build
         run: npm run build
 
+  e2e:
+    name: Test critical user journeys
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: e2e_user
+          POSTGRES_PASSWORD: e2e_password
+          POSTGRES_DB: roommate_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U e2e_user -d roommate_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: roommate
+
+    env:
+      CI: "true"
+      DATABASE_URL: postgresql://e2e_user:e2e_password@127.0.0.1:5432/roommate_e2e
+      AUTH_SECRET: e2e-only-secret-with-at-least-32-characters
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: roommate/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Rebuild schema from committed migrations
+        run: npm run db:deploy
+
+      - name: Install Chromium runtime
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser journeys
+        run: npm run test:e2e
+
   container:
     name: Build deployment image
-    needs: verify
+    needs:
+      - verify
+      - e2e
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
