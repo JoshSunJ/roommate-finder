@@ -1,0 +1,20 @@
+project_id             = "unitern-production"
+region                 = "us-west1"
+github_repository      = "JoshSunJ/roommate-finder"
+admin_email            = "your-real-admin-address@example.com"
+email_from             = "Unitern <accounts@your-verified-domain.example>"
+r2_bucket              = "unitern-listing-photos"
+r2_endpoint            = "https://ACCOUNT_ID.r2.cloudflarestorage.com"
+photo_public_base_url  = "https://photos.your-domain.example"
+road_routing_enabled   = false
+max_instances          = 2
+deletion_protection    = true
+create_budget          = true
+billing_account_id     = "000000-000000-000000"
+monthly_budget_usd     = 10
+
+# Leave these values disabled until the first immutable image has been pushed
+# and every Secret Manager container has a current version.
+deploy_application = false
+container_image     = ""
+
