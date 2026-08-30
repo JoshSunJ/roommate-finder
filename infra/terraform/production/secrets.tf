@@ -21,11 +21,13 @@ resource "google_secret_manager_secret_iam_member" "runtime_access" {
 }
 
 resource "google_secret_manager_secret_iam_member" "deployment_access" {
-  for_each = google_secret_manager_secret.application
+  for_each = toset([
+    local.required_secret_environment.DATABASE_URL,
+    local.required_secret_environment.DIRECT_DATABASE_URL,
+  ])
 
   project   = var.project_id
-  secret_id = each.value.secret_id
+  secret_id = google_secret_manager_secret.application[each.value].secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.deployment.email}"
 }
-

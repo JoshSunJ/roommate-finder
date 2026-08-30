@@ -14,6 +14,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  infrastructure:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.0
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra/terraform
+
+      - name: Initialize state bootstrap without a backend
+        run: terraform -chdir=infra/terraform/bootstrap init -backend=false
+
+      - name: Validate state bootstrap
+        run: terraform -chdir=infra/terraform/bootstrap validate
+
+      - name: Initialize production infrastructure without a backend
+        run: terraform -chdir=infra/terraform/production init -backend=false
+
+      - name: Validate production infrastructure
+        run: terraform -chdir=infra/terraform/production validate
+
   verify:
     name: Test, lint, and build
     runs-on: ubuntu-latest

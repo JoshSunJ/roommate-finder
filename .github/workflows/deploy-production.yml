@@ -1,0 +1,114 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - "roommate/**"
+      - ".github/workflows/deploy-production.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Migrate, deploy, and smoke test
+    if: ${{ vars.GCP_PROJECT_ID != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE }}
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/unitern/web:${{ github.sha }}
+
+    steps:
+      - name: Check out the released commit
+        uses: actions/checkout@v7
+
+      - name: Authenticate with short-lived Google credentials
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Require the restricted public map key
+        env:
+          NEXT_PUBLIC_MAPTILER_KEY: ${{ vars.NEXT_PUBLIC_MAPTILER_KEY }}
+        run: test -n "${NEXT_PUBLIC_MAPTILER_KEY}"
+
+      - name: Build the immutable application image
+        working-directory: roommate
+        env:
+          NEXT_PUBLIC_MAPTILER_KEY: ${{ vars.NEXT_PUBLIC_MAPTILER_KEY }}
+          NEXT_PUBLIC_MAP_STYLE_URL: ${{ vars.NEXT_PUBLIC_MAP_STYLE_URL }}
+        run: >-
+          docker build
+          --build-arg NEXT_PUBLIC_MAPTILER_KEY="${NEXT_PUBLIC_MAPTILER_KEY}"
+          --build-arg NEXT_PUBLIC_MAP_STYLE_URL="${NEXT_PUBLIC_MAP_STYLE_URL}"
+          --tag "${IMAGE}"
+          .
+
+      - name: Push the immutable application image
+        run: docker push "${IMAGE}"
+
+      - name: Load migration-only database credentials
+        id: database-secrets
+        uses: google-github-actions/get-secretmanager-secrets@v3
+        with:
+          export_to_environment: true
+          secrets: |-
+            DATABASE_URL:${{ vars.GCP_PROJECT_ID }}/unitern-database-url
+            DIRECT_DATABASE_URL:${{ vars.GCP_PROJECT_ID }}/unitern-direct-database-url
+
+      - name: Set up Node.js for migration tooling
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: roommate/package-lock.json
+
+      - name: Install locked release tooling
+        working-directory: roommate
+        run: npm ci
+
+      - name: Reject an unsafe production database target
+        working-directory: roommate
+        run: npm run db:validate:production
+
+      - name: Apply reviewed database migrations once
+        working-directory: roommate
+        run: npm run db:deploy
+
+      - name: Promote the image to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          region: ${{ vars.GCP_REGION }}
+          service: ${{ vars.CLOUD_RUN_SERVICE }}
+          image: ${{ env.IMAGE }}
+
+      - name: Verify the deployed system
+        working-directory: roommate
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
+        run: npm run smoke:production

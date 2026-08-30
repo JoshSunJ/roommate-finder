@@ -52,9 +52,10 @@ Required values are:
 - R2 access-key ID and secret access key;
 - optional Mapbox token when road routing is enabled.
 
-The runtime and protected deployment service accounts can read these secrets.
-The deployment identity needs them to validate configuration and execute a
-single reviewed migration step before promoting a revision.
+The runtime identity can read all application secrets. The protected deployment
+identity can read only the pooled and direct database URLs, because its release
+responsibility is limited to validating and applying migrations before
+promoting a revision.
 
 ## Ownership boundary
 
@@ -62,3 +63,24 @@ Terraform owns service configuration, IAM, scaling, probes, and secrets. The
 release workflow owns only the container image promoted into the service. The
 Terraform lifecycle rule ignores image changes so a successful deployment does
 not appear as infrastructure drift on the next plan.
+
+## GitHub deployment variables
+
+After the first infrastructure apply, configure these non-secret repository
+variables:
+
+```text
+GCP_PROJECT_ID
+GCP_REGION
+GCP_WORKLOAD_IDENTITY_PROVIDER
+GCP_DEPLOY_SERVICE_ACCOUNT
+CLOUD_RUN_SERVICE
+NEXT_PUBLIC_MAPTILER_KEY
+NEXT_PUBLIC_MAP_STYLE_URL
+```
+
+Use the matching Terraform outputs for the provider and service-account values.
+The public MapTiler browser key must be restricted to the production origin.
+None of these values are private credentials; Google Cloud authorization comes
+from the short-lived GitHub OIDC token. The workflow still targets GitHub's
+`production` environment so you can add a deployment approval rule separately.
