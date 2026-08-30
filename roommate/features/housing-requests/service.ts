@@ -6,6 +6,7 @@ import type {
   CreateHousingRequestInput,
   HousingRequest,
   HousingRequestStatus,
+  UpdateHousingRequestInput,
 } from "./types";
 
 const requestWithOwner = {
@@ -99,6 +100,39 @@ export async function updateHousingRequestStatusForOwner(
   const result = await prisma.housingRequest.updateMany({
     where: { id: requestId, ownerId },
     data: { status },
+  });
+
+  return result.count === 1;
+}
+
+export async function updateHousingRequestForOwner(
+  requestId: number,
+  ownerId: number,
+  input: UpdateHousingRequestInput,
+): Promise<HousingRequest | undefined> {
+  return prisma.$transaction(async (transaction) => {
+    const result = await transaction.housingRequest.updateMany({
+      where: { id: requestId, ownerId },
+      data: input,
+    });
+
+    if (result.count !== 1) return undefined;
+
+    return toHousingRequest(
+      await transaction.housingRequest.findUnique({
+        ...requestWithOwner,
+        where: { id: requestId },
+      }),
+    );
+  });
+}
+
+export async function deleteHousingRequestForOwner(
+  requestId: number,
+  ownerId: number,
+): Promise<boolean> {
+  const result = await prisma.housingRequest.deleteMany({
+    where: { id: requestId, ownerId },
   });
 
   return result.count === 1;

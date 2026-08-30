@@ -37,12 +37,16 @@ export default async function ConversationPage({ params }: PageProps) {
         <header className="conversation-header">
           <div>
             <p className="eyebrow">Conversation with {otherParticipant.name}</p>
-            <h1>{conversation.listing.title}</h1>
+            <h1>{conversation.subject.title}</h1>
             <p>{otherParticipant.affiliationName
               ? `${otherParticipant.affiliationType ?? "Member"} · ${otherParticipant.affiliationName}`
               : "Verified community member"}</p>
           </div>
-          <Link href={`/listings/${conversation.listing.id}`}>View listing ↗</Link>
+          <Link href={conversation.subject.kind === "listing"
+            ? `/listings/${conversation.subject.id}`
+            : `/requests/${conversation.subject.id}`}>
+            View {conversation.subject.kind === "listing" ? "listing" : "request"} ↗
+          </Link>
         </header>
 
         <section className="message-thread" aria-label={`Messages with ${otherParticipant.name}`}>

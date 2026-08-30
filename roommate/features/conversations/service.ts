@@ -2,16 +2,24 @@ import { isEitherUserBlocked } from "@/features/blocks/service";
 import type {
   ConversationDetail,
   ConversationParticipant,
+  ConversationSubject,
   ConversationSummary,
 } from "@/features/conversations/types";
 import prisma from "@/lib/prisma";
 
 type StartConversationInput = { listingId: number; message: string };
+type StartHousingRequestConversationInput = { housingRequestId: number; message: string };
 
 export type StartConversationResult =
   | { kind: "created"; conversationId: number }
   | { kind: "listing-not-found" }
   | { kind: "own-listing" }
+  | { kind: "blocked" };
+
+export type StartHousingRequestConversationResult =
+  | { kind: "created"; conversationId: number }
+  | { kind: "request-not-found" }
+  | { kind: "own-request" }
   | { kind: "blocked" };
 
 export type SendMessageResult = "created" | "not-found" | "blocked";
@@ -22,6 +30,18 @@ const participantSelect = {
   affiliationType: true,
   affiliationName: true,
 } as const;
+
+function toConversationSubject(record: {
+  listing: { id: number; title: string; status: string } | null;
+  housingRequest: { id: number; title: string; status: string } | null;
+}): ConversationSubject {
+  if (record.listing) return { kind: "listing", ...record.listing };
+  if (record.housingRequest) {
+    return { kind: "housing_request", ...record.housingRequest };
+  }
+
+  throw new Error("Conversation has no marketplace subject.");
+}
 
 export async function startConversation(
   input: StartConversationInput,
@@ -55,11 +75,51 @@ export async function startConversation(
   return { kind: "created", conversationId: conversation.id };
 }
 
+export async function startHousingRequestConversation(
+  input: StartHousingRequestConversationInput,
+  senderId: number,
+): Promise<StartHousingRequestConversationResult> {
+  const housingRequest = await prisma.housingRequest.findFirst({
+    where: { id: input.housingRequestId, status: "active" },
+    select: { ownerId: true },
+  });
+
+  if (!housingRequest) return { kind: "request-not-found" };
+  if (housingRequest.ownerId === senderId) return { kind: "own-request" };
+  if (await isEitherUserBlocked(senderId, housingRequest.ownerId)) {
+    return { kind: "blocked" };
+  }
+
+  const conversation = await prisma.$transaction(async (transaction) => {
+    const thread = await transaction.conversation.upsert({
+      where: {
+        housingRequestId_seekerId: {
+          housingRequestId: input.housingRequestId,
+          seekerId: senderId,
+        },
+      },
+      update: { updatedAt: new Date() },
+      create: {
+        housingRequestId: input.housingRequestId,
+        ownerId: housingRequest.ownerId,
+        seekerId: senderId,
+      },
+    });
+    await transaction.message.create({
+      data: { conversationId: thread.id, senderId, body: input.message },
+    });
+    return thread;
+  });
+
+  return { kind: "created", conversationId: conversation.id };
+}
+
 export async function getConversationSummaries(userId: number): Promise<ConversationSummary[]> {
   const conversations = await prisma.conversation.findMany({
     where: { OR: [{ ownerId: userId }, { seekerId: userId }] },
     include: {
       listing: { select: { id: true, title: true, status: true } },
+      housingRequest: { select: { id: true, title: true, status: true } },
       owner: { select: participantSelect },
       seeker: { select: participantSelect },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
@@ -77,7 +137,7 @@ export async function getConversationSummaries(userId: number): Promise<Conversa
     if (!lastMessage) return [];
     return [{
       id: conversation.id,
-      listing: conversation.listing,
+      subject: toConversationSubject(conversation),
       otherParticipant: conversation.ownerId === userId
         ? conversation.seeker as ConversationParticipant
         : conversation.owner as ConversationParticipant,
@@ -111,6 +171,7 @@ export async function getConversationAndMarkRead(
       where: { id: conversationId },
       include: {
         listing: { select: { id: true, title: true, status: true } },
+        housingRequest: { select: { id: true, title: true, status: true } },
         owner: { select: participantSelect },
         seeker: { select: participantSelect },
         messages: {
@@ -124,7 +185,7 @@ export async function getConversationAndMarkRead(
 
   return {
     id: record.id,
-    listing: record.listing,
+    subject: toConversationSubject(record),
     owner: record.owner,
     seeker: record.seeker,
     messages: record.messages.map((message) => ({

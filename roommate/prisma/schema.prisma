@@ -8,29 +8,28 @@ datasource db {
 }
 
 model User {
-  id                      Int                   @id @default(autoincrement())
+  id                      Int                      @id @default(autoincrement())
   name                    String
-  email                   String                @unique
+  email                   String                   @unique
   emailVerifiedAt         DateTime?
   passwordHash            String?
-  sessionVersion          Int                   @default(0)
+  sessionVersion          Int                      @default(0)
   affiliationType         String?
   affiliationName         String?
-  verificationStatus      String                @default("unverified")
+  verificationStatus      String                   @default("unverified")
   verificationSubmittedAt DateTime?
-  createdAt               DateTime              @default(now())
+  createdAt               DateTime                 @default(now())
   listings                Listing[]
   housingRequests         HousingRequest[]
-  ownedConversations      Conversation[]        @relation("ConversationOwner")
-  seekingConversations    Conversation[]        @relation("ConversationSeeker")
+  ownedConversations      Conversation[]           @relation("ConversationOwner")
+  seekingConversations    Conversation[]           @relation("ConversationSeeker")
   messages                Message[]
   savedListings           SavedListing[]
   savedHousingRequests    SavedHousingRequest[]
-  sentLeadResponses       LeadResponse[]        @relation("LeadResponseSender")
-  reportsMade             Report[]              @relation("ReportReporter")
-  reportsReviewed         Report[]              @relation("ReportReviewer")
-  blocksCreated           UserBlock[]           @relation("Blocker")
-  blocksReceived          UserBlock[]           @relation("Blocked")
+  reportsMade             Report[]                 @relation("ReportReporter")
+  reportsReviewed         Report[]                 @relation("ReportReviewer")
+  blocksCreated           UserBlock[]              @relation("Blocker")
+  blocksReceived          UserBlock[]              @relation("Blocked")
   emailVerificationTokens EmailVerificationToken[]
   passwordResetToken      PasswordResetToken?
 }
@@ -134,19 +133,23 @@ model SavedListing {
 }
 
 model Conversation {
-  id        Int      @id @default(autoincrement())
-  listingId Int
-  ownerId   Int
-  seekerId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  listingId        Int?
+  housingRequestId Int?
+  ownerId          Int
+  seekerId         Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  listing  Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  owner    User      @relation("ConversationOwner", fields: [ownerId], references: [id], onDelete: Restrict)
-  seeker   User      @relation("ConversationSeeker", fields: [seekerId], references: [id], onDelete: Restrict)
-  messages Message[]
+  listing        Listing?        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  housingRequest HousingRequest? @relation(fields: [housingRequestId], references: [id], onDelete: Cascade)
+  owner          User            @relation("ConversationOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  seeker         User            @relation("ConversationSeeker", fields: [seekerId], references: [id], onDelete: Restrict)
+  messages       Message[]
 
   @@unique([listingId, seekerId])
+  @@unique([housingRequestId, seekerId])
+  @@index([housingRequestId])
   @@index([ownerId, updatedAt])
   @@index([seekerId, updatedAt])
 }
@@ -183,7 +186,7 @@ model HousingRequest {
   updatedAt         DateTime @updatedAt
 
   owner         User                  @relation(fields: [ownerId], references: [id], onDelete: Restrict)
-  leadResponses LeadResponse[]
+  conversations Conversation[]
   savedBy       SavedHousingRequest[]
 
   @@index([ownerId])
@@ -201,19 +204,6 @@ model SavedHousingRequest {
 
   @@id([userId, housingRequestId])
   @@index([userId, createdAt])
-}
-
-model LeadResponse {
-  id               Int            @id @default(autoincrement())
-  housingRequestId Int
-  senderId         Int
-  message          String
-  createdAt        DateTime       @default(now())
-  housingRequest   HousingRequest @relation(fields: [housingRequestId], references: [id], onDelete: Cascade)
-  sender           User           @relation("LeadResponseSender", fields: [senderId], references: [id], onDelete: Restrict)
-
-  @@index([housingRequestId])
-  @@index([senderId])
 }
 
 // Reports preserve the original complaint and the administrator's decision.

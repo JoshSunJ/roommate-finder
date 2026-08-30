@@ -2,12 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import HousingRequestStatusControl from "@/components/HousingRequestStatusControl";
-import LeadResponseForm from "@/components/LeadResponseForm";
+import DeleteHousingRequestButton from "@/components/DeleteHousingRequestButton";
+import HousingRequestContactForm from "@/components/HousingRequestContactForm";
 import ListingRecommendationCard from "@/components/ListingRecommendationCard";
 import SafetyActions from "@/components/SafetyActions";
 import SaveItemButton from "@/components/SaveItemButton";
 import { hasUserBlocked, isEitherUserBlocked } from "@/features/blocks/service";
-import { getLeadResponsesForRequest } from "@/features/lead-responses/service";
 import { getHousingRequestById } from "@/features/housing-requests/service";
 import { getListings } from "@/features/listings/service";
 import { rankListingsForRequest } from "@/features/matching/service";
@@ -24,7 +24,6 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
   const isSaved = currentUser
     ? await isItemSaved(currentUser.id, { targetType: "housing_request", targetId: request.id })
     : false;
-  const leadResponses = currentUser?.id === request.ownerId ? await getLeadResponsesForRequest(request.id) : [];
   const contactBlocked = currentUser && currentUser.id !== request.ownerId ? await isEitherUserBlocked(currentUser.id, request.ownerId) : false;
   const ownerBlocked = currentUser && currentUser.id !== request.ownerId ? await hasUserBlocked(currentUser.id, request.ownerId) : false;
   const recommendations = currentUser?.id === request.ownerId
@@ -50,6 +49,10 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
       </article>
       {currentUser?.id === request.ownerId ? (
         <>
+          <div className="listing-management">
+            <Link className="listing-edit-link" href={`/requests/${request.id}/edit`}>Edit request ↗</Link>
+            <DeleteHousingRequestButton requestId={request.id} />
+          </div>
           <HousingRequestStatusControl requestId={request.id} currentStatus={request.status} />
           <section className="match-results" aria-labelledby="recommended-homes">
             <div className="section-heading">
@@ -63,10 +66,12 @@ export default async function HousingRequestDetailPage({ params }: PageProps) {
               ? <p className="empty-state">No active homes from other posters are available to compare yet.</p>
               : <div className="match-grid">{recommendations.map((recommendation) => <ListingRecommendationCard key={recommendation.listing.id} recommendation={recommendation} />)}</div>}
           </section>
-          {leadResponses.map((lead) => <article className="inquiry-form" key={lead.id}><p className="eyebrow">Lead from {lead.sender.name}</p><p>{lead.message}</p><a href={`mailto:${lead.sender.email}`}>Reply by email ↗</a></article>)}
+          <p className="owner-notice">
+            New housing leads appear as private threads in your <Link href="/inquiries">inbox</Link>.
+          </p>
         </>
       ) : (
-        currentUser ? <>{contactBlocked ? <p className="owner-notice">Contact is disabled because one account has blocked the other.</p> : <LeadResponseForm housingRequestId={request.id} />}<SafetyActions targetType="housing_request" targetId={request.id} ownerId={request.ownerId} initiallyBlocked={ownerBlocked} /></> : <p className="owner-notice"><Link href="/sign-in">Sign in</Link> to share a lead.</p>
+        currentUser ? <>{contactBlocked ? <p className="owner-notice">Contact is disabled because one account has blocked the other.</p> : <HousingRequestContactForm housingRequestId={request.id} />}<SafetyActions targetType="housing_request" targetId={request.id} ownerId={request.ownerId} initiallyBlocked={ownerBlocked} /></> : <p className="owner-notice"><Link href="/sign-in">Sign in</Link> to share a lead.</p>
       )}
     </main>
   );
