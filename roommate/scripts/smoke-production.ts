@@ -38,11 +38,18 @@ async function main() {
     }
   }
 
-  const healthResponse = await fetch(new URL("/api/health", baseUrl), { cache: "no-store" });
-  if (!healthResponse.ok) throw new Error(`/api/health returned HTTP ${healthResponse.status}.`);
+  const liveResponse = await fetch(new URL("/api/health/live", baseUrl), { cache: "no-store" });
+  if (!liveResponse.ok) throw new Error(`/api/health/live returned HTTP ${liveResponse.status}.`);
+  const live = await liveResponse.json() as { status?: unknown };
+  if (live.status !== "ok") {
+    throw new Error("The application liveness check did not report an operational process.");
+  }
+
+  const healthResponse = await fetch(new URL("/api/health/ready", baseUrl), { cache: "no-store" });
+  if (!healthResponse.ok) throw new Error(`/api/health/ready returned HTTP ${healthResponse.status}.`);
   const health = await healthResponse.json() as { status?: unknown; database?: unknown };
   if (health.status !== "ok" || health.database !== "reachable") {
-    throw new Error("The application health check did not report a reachable database.");
+    throw new Error("The application readiness check did not report a reachable database.");
   }
 
   console.log(`Production smoke checks passed for ${baseUrl.origin}.`);
