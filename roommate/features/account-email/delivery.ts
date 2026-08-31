@@ -14,6 +14,14 @@ type PasswordResetMessage = {
   idempotencyKey: string;
 };
 
+type AffiliationVerificationMessage = {
+  recipient: string;
+  name: string;
+  organizationName: string;
+  token: string;
+  idempotencyKey: string;
+};
+
 export type EmailDeliveryResult = {
   provider: "preview" | "resend";
   previewUrl?: string;
@@ -108,6 +116,15 @@ export function buildPasswordResetUrl(token: string, environment: Environment = 
   return url.toString();
 }
 
+export function buildAffiliationVerificationUrl(
+  token: string,
+  environment: Environment = process.env,
+) {
+  const url = new URL("/api/verification/confirm", appUrl(environment));
+  url.searchParams.set("token", token);
+  return url.toString();
+}
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;",
@@ -190,6 +207,52 @@ export async function sendPasswordReset(
       subject: "Reset your Unitern password",
       text: `Hi ${message.name}, reset your Unitern password within 1 hour: ${resetUrl}`,
       html: `<p>Hi ${safeName},</p><p>Reset your Unitern password within 1 hour.</p><p><a href="${safeUrl}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new EmailDeliveryError(
+      response.status,
+      response.headers.get("x-request-id") ?? undefined,
+    );
+  }
+
+  const payload = await response.json().catch(() => null) as { id?: unknown } | null;
+  return {
+    provider: "resend",
+    ...(typeof payload?.id === "string" ? { providerMessageId: payload.id } : {}),
+  };
+}
+
+export async function sendAffiliationVerification(
+  message: AffiliationVerificationMessage,
+  environment: Environment = process.env,
+  fetchImplementation: typeof fetch = fetch,
+): Promise<EmailDeliveryResult> {
+  const verificationUrl = buildAffiliationVerificationUrl(message.token, environment);
+  const configuration = validateEmailDeliveryConfiguration(environment);
+
+  if (configuration.provider === "preview") {
+    return { provider: "preview", previewUrl: verificationUrl };
+  }
+
+  const safeName = escapeHtml(message.name);
+  const safeOrganization = escapeHtml(message.organizationName);
+  const safeUrl = escapeHtml(verificationUrl);
+  const response = await fetchImplementation("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${configuration.apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": message.idempotencyKey,
+      "User-Agent": "Unitern/1.0",
+    },
+    body: JSON.stringify({
+      from: configuration.sender,
+      to: [message.recipient],
+      subject: `Verify your ${message.organizationName} affiliation`,
+      text: `Hi ${message.name}, verify your ${message.organizationName} affiliation for Unitern within 24 hours: ${verificationUrl}`,
+      html: `<p>Hi ${safeName},</p><p>Verify your ${safeOrganization} affiliation for Unitern within 24 hours.</p><p><a href="${safeUrl}">Verify affiliation</a></p><p>If you did not request this, you can ignore this email.</p>`,
     }),
   });
 

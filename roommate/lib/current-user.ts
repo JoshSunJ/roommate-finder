@@ -7,7 +7,9 @@ export type CurrentUser = {
   email: string;
   affiliationType: string | null;
   affiliationName: string | null;
-  verificationStatus: "unverified" | "submitted" | "verified" | "rejected";
+  affiliationVerificationMethod: string | null;
+  affiliationExpiresAt: Date | null;
+  verificationStatus: "unverified" | "submitted" | "verified" | "rejected" | "expired";
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -26,13 +28,21 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     return null;
   }
 
+  const verificationStatus = user.verificationStatus === "verified"
+    && user.affiliationExpiresAt
+    && user.affiliationExpiresAt <= new Date()
+    ? "expired"
+    : user.verificationStatus as CurrentUser["verificationStatus"];
+
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     affiliationType: user.affiliationType,
     affiliationName: user.affiliationName,
-    verificationStatus: user.verificationStatus as CurrentUser["verificationStatus"],
+    affiliationVerificationMethod: user.affiliationVerificationMethod,
+    affiliationExpiresAt: user.affiliationExpiresAt,
+    verificationStatus,
   };
 }
 
