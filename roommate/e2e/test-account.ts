@@ -5,3 +5,6 @@ export const E2E_RESET_PASSWORD = "ResetPassword-2026!";
 export const E2E_MARKETPLACE_OWNER_EMAIL = "marketplace-owner@e2e.unitern.local";
 export const E2E_MARKETPLACE_HELPER_EMAIL = "marketplace-helper@e2e.unitern.local";
 export const E2E_MARKETPLACE_PASSWORD = "MarketplacePassword-2026!";
+export const E2E_AFFILIATION_EMAIL = "affiliation-applicant@e2e.unitern.local";
+export const E2E_AFFILIATION_INSTITUTION_EMAIL = "affiliation-applicant@sjsu.edu";
+export const E2E_AFFILIATION_PASSWORD = "AffiliationPassword-2026!";

@@ -5,6 +5,9 @@ import { hash } from "bcryptjs";
 import { Pool } from "pg";
 
 import {
+  E2E_AFFILIATION_EMAIL,
+  E2E_AFFILIATION_INSTITUTION_EMAIL,
+  E2E_AFFILIATION_PASSWORD,
   E2E_EMAIL,
   E2E_MARKETPLACE_HELPER_EMAIL,
   E2E_MARKETPLACE_OWNER_EMAIL,
@@ -15,6 +18,7 @@ const testEmails = [
   E2E_EMAIL,
   E2E_MARKETPLACE_OWNER_EMAIL,
   E2E_MARKETPLACE_HELPER_EMAIL,
+  E2E_AFFILIATION_EMAIL,
 ];
 
 function key(scope: string, identifier: string) {
@@ -33,6 +37,10 @@ function database() {
 export async function cleanE2EAccount() {
   const pool = database();
   try {
+    const users = await pool.query<{ id: number }>(
+      `SELECT "id" FROM "User" WHERE "email" = ANY($1::text[])`,
+      [testEmails],
+    );
     await pool.query(
       `DELETE FROM "Listing"
        WHERE "ownerId" IN (SELECT "id" FROM "User" WHERE "email" = ANY($1::text[]))`,
@@ -48,7 +56,12 @@ export async function cleanE2EAccount() {
       key("register-email", email),
       key("password-reset-address", email),
       key("sign-in-address", email),
+      key("affiliation-email", email),
     ]);
+    rateLimitKeys.push(key("affiliation-email", E2E_AFFILIATION_INSTITUTION_EMAIL));
+    for (const user of users.rows) {
+      rateLimitKeys.push(key("affiliation-user", String(user.id)));
+    }
     await pool.query(
       `DELETE FROM "RateLimitBucket" WHERE "key" = ANY($1::text[])`,
       [rateLimitKeys],
@@ -70,6 +83,21 @@ export async function createMarketplaceE2EAccounts() {
          ('Marketplace Owner', $1, NOW(), $3, 'intern', 'Unitern E2E', 'verified'),
          ('Helpful Student', $2, NOW(), $3, 'student', 'Unitern E2E', 'verified')`,
       [E2E_MARKETPLACE_OWNER_EMAIL, E2E_MARKETPLACE_HELPER_EMAIL, passwordHash],
+    );
+  } finally {
+    await pool.end();
+  }
+}
+
+export async function createAffiliationE2EAccount() {
+  const pool = database();
+  const passwordHash = await hash(E2E_AFFILIATION_PASSWORD, 4);
+  try {
+    await pool.query(
+      `INSERT INTO "User" (
+         "name", "email", "emailVerifiedAt", "passwordHash", "verificationStatus"
+       ) VALUES ('Affiliation Applicant', $1, NOW(), $2, 'unverified')`,
+      [E2E_AFFILIATION_EMAIL, passwordHash],
     );
   } finally {
     await pool.end();
