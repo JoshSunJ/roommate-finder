@@ -37,14 +37,21 @@ export default async function InquiriesPage() {
               >
                 <div className="conversation-preview__heading">
                   <div>
-                    <p className="eyebrow">{conversation.listing.title}</p>
+                    <p className="eyebrow">
+                      {conversation.subject.kind === "listing" ? "Room listing" : "Housing request"}
+                      {" · "}{conversation.subject.title}
+                    </p>
                     <h2>{conversation.otherParticipant.name}</h2>
                   </div>
                   <time dateTime={conversation.updatedAt.toISOString()}>{dateFormatter.format(conversation.updatedAt)}</time>
                 </div>
                 <p><strong>{conversation.lastMessage.senderId === currentUser.id ? "You: " : ""}</strong>{conversation.lastMessage.body}</p>
                 <div className="conversation-preview__footer">
-                  <span>{conversation.listing.status === "active" ? "Active listing" : `Listing ${conversation.listing.status}`}</span>
+                  <span>
+                    {conversation.subject.status === "active"
+                      ? `Active ${conversation.subject.kind === "listing" ? "listing" : "request"}`
+                      : `${conversation.subject.kind === "listing" ? "Listing" : "Request"} ${conversation.subject.status}`}
+                  </span>
                   {conversation.unreadCount > 0 && <span className="unread-badge">{conversation.unreadCount} new</span>}
                 </div>
               </Link>

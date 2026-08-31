@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import NewHousingRequestForm from "@/components/NewHousingRequestForm";
+import HousingRequestForm from "@/components/HousingRequestForm";
 import { getCurrentUser } from "@/lib/current-user";
 
 export default async function NewHousingRequestPage() {
@@ -16,7 +16,7 @@ export default async function NewHousingRequestPage() {
         Describe the practical constraints of your search. Your request is public;
         only share details you would be comfortable showing to the community.
       </p>
-      <NewHousingRequestForm />
+      <HousingRequestForm mode="create" />
     </main>
   );
 }

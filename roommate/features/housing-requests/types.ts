@@ -20,3 +20,5 @@ export type CreateHousingRequestInput = Omit<
   HousingRequest,
   "id" | "ownerId" | "requestedBy" | "status"
 >;
+
+export type UpdateHousingRequestInput = CreateHousingRequestInput;

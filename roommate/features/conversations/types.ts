@@ -5,9 +5,13 @@ export type ConversationParticipant = {
   affiliationName: string | null;
 };
 
+export type ConversationSubject =
+  | { kind: "listing"; id: number; title: string; status: string }
+  | { kind: "housing_request"; id: number; title: string; status: string };
+
 export type ConversationSummary = {
   id: number;
-  listing: { id: number; title: string; status: string };
+  subject: ConversationSubject;
   otherParticipant: ConversationParticipant;
   lastMessage: { body: string; senderId: number; createdAt: Date };
   unreadCount: number;
@@ -25,7 +29,7 @@ export type ConversationMessage = {
 
 export type ConversationDetail = {
   id: number;
-  listing: { id: number; title: string; status: string };
+  subject: ConversationSubject;
   owner: ConversationParticipant;
   seeker: ConversationParticipant;
   messages: ConversationMessage[];

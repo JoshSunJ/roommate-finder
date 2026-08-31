@@ -1,9 +1,11 @@
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import DeleteListingButton from "@/components/DeleteListingButton";
+import DeleteHousingRequestButton from "@/components/DeleteHousingRequestButton";
 import ListingStatusControl from "@/components/ListingStatusControl";
 import ListingCard from "@/components/ListingCard";
 import HousingRequestCard from "@/components/HousingRequestCard";
+import HousingRequestStatusControl from "@/components/HousingRequestStatusControl";
 import { getHousingRequestsForOwner } from "@/features/housing-requests/service";
 import { getListingsForOwner } from "@/features/listings/service";
 import { getCurrentUser } from "@/lib/current-user";
@@ -59,7 +61,12 @@ export default async function DashboardPage() {
           ) : (
             <div className="housing-request-grid">
               {housingRequests.map((request) => (
-                <HousingRequestCard key={request.id} request={request} />
+                <article key={request.id}>
+                  <HousingRequestCard request={request} />
+                  <Link className="listing-edit-link" href={`/requests/${request.id}/edit`}>Edit request ↗</Link>
+                  <HousingRequestStatusControl requestId={request.id} currentStatus={request.status} />
+                  <DeleteHousingRequestButton requestId={request.id} />
+                </article>
               ))}
             </div>
           )}
