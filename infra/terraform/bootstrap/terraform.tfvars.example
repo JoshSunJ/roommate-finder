@@ -1,0 +1,4 @@
+project_id        = "unitern-production"
+region            = "us-west1"
+state_bucket_name = "unitern-production-terraform-state"
+

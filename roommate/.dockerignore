@@ -7,6 +7,7 @@ tests
 coverage
 .env
 .env.*
+gha-creds-*.json
 npm-debug.log*
 public/uploads/listings/*
 !public/uploads/listings/.gitkeep

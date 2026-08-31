@@ -66,7 +66,7 @@ Before a production release:
 4. Run `npm run db:validate:production` to reject local or unencrypted targets.
 5. Run `npm run db:deploy` from the deployment pipeline to apply committed migrations.
 6. Deploy the application only after migrations succeed.
-7. Verify `/api/health` returns HTTP 200 with `database: "reachable"`.
+7. Verify `/api/health/ready` returns HTTP 200 with `database: "reachable"`.
 
 `npm run db:migrate` is for development because it creates migration files and
 may ask development-only questions. Production uses `npm run db:deploy`, which
@@ -157,7 +157,8 @@ runs. Do not bake `.env` into the image. The container:
 - starts Next.js's traced standalone server;
 - validates the production environment before accepting requests;
 - exposes port 3000;
-- reports container health through `/api/health`;
+- reports process liveness through `/api/health/live`;
+- reports database-backed readiness through `/api/health/ready`;
 - includes `sharp` for production image optimization.
 
 GitHub CI builds the deployment image after tests, lint, migrations, and the
@@ -255,8 +256,8 @@ SMOKE_BASE_URL=https://staging.example.com npm run smoke:production
 ```
 
 The smoke test intentionally uses read-only requests. It verifies the main
-public pages, the security headers, and `/api/health` without creating users or
-listings in production.
+public pages, security headers, process liveness, and database-backed readiness
+without creating users or listings in production.
 
 ### Email delivery diagnosis
 
