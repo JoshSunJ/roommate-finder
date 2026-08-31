@@ -49,11 +49,12 @@ durable files belong in R2, so any Cloud Run instance can handle any request.
 
 ## Release model
 
-One immutable image is built for a commit and identified by its Git SHA:
+Each isolated environment builds an immutable image for a commit and identifies
+it by the same Git SHA:
 
 ```text
-pull request -> CI checks -> merge to master -> build image -> migrate database
-             -> deploy image revision -> readiness check -> smoke test
+pull request -> CI checks -> merge to master -> staging migration/deployment/smoke
+             -> manual production approval -> production migration/deployment/smoke
 ```
 
 Database migrations run once from the trusted release workflow before the new
@@ -64,6 +65,10 @@ Production deployments use a protected GitHub environment. The environment may
 require manual approval even after CI passes. A green CI run makes a revision
 eligible for deployment; it does not approve product changes or automatically
 merge a pull request.
+
+Staging uses the same Terraform declarations and release workflow in a separate
+Google Cloud project, database, storage bucket, GitHub environment, and state
+prefix. It deploys automatically after relevant changes reach `master`.
 
 ## Secret and state rules
 
