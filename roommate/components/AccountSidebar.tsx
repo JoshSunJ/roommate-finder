@@ -5,7 +5,7 @@ import SignOutButton from "@/components/SignOutButton";
 type Props = {
   signedIn: boolean;
   isAdmin: boolean;
-  verificationStatus?: "unverified" | "submitted" | "verified" | "rejected";
+  verificationStatus?: "unverified" | "submitted" | "verified" | "rejected" | "expired";
   unreadConversationCount: number;
 };
 

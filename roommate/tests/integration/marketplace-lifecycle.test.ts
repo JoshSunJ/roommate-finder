@@ -35,7 +35,7 @@ test("a housing request can be managed only by its owner and contacted privately
         name: ["Request Owner", "Helpful Student", "Other User"][index],
         email,
         emailVerifiedAt: new Date(),
-        verificationStatus: "approved",
+        verificationStatus: "verified",
       },
     })),
   );
