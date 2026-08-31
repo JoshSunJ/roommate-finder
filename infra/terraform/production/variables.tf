@@ -1,6 +1,17 @@
 variable "project_id" {
-  description = "Google Cloud project that owns Unitern production infrastructure."
+  description = "Google Cloud project that owns this isolated Unitern environment."
   type        = string
+}
+
+variable "environment_name" {
+  description = "Deployment environment represented by this state."
+  type        = string
+  default     = "production"
+
+  validation {
+    condition     = contains(["staging", "production"], var.environment_name)
+    error_message = "environment_name must be staging or production."
+  }
 }
 
 variable "region" {
@@ -97,7 +108,7 @@ variable "max_instances" {
 }
 
 variable "deletion_protection" {
-  description = "Protect the production Cloud Run service from accidental deletion."
+  description = "Protect the Cloud Run service from accidental deletion."
   type        = bool
   default     = true
 }
@@ -119,4 +130,3 @@ variable "monthly_budget_usd" {
   type        = number
   default     = 10
 }
-

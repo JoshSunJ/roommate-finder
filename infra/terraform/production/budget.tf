@@ -2,7 +2,7 @@ resource "google_billing_budget" "production" {
   count = var.create_budget ? 1 : 0
 
   billing_account = var.billing_account_id
-  display_name    = "Unitern production monthly budget"
+  display_name    = "Unitern ${var.environment_name} monthly budget"
 
   budget_filter {
     projects = ["projects/${data.google_project.current.number}"]
@@ -33,4 +33,3 @@ resource "google_billing_budget" "production" {
 
   depends_on = [google_project_service.required]
 }
-

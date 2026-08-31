@@ -1,4 +1,5 @@
 project_id             = "unitern-production"
+environment_name       = "production"
 region                 = "us-west1"
 github_repository      = "JoshSunJ/roommate-finder"
 admin_email            = "your-real-admin-address@example.com"
@@ -17,4 +18,3 @@ monthly_budget_usd     = 10
 # and every Secret Manager container has a current version.
 deploy_application = false
 container_image     = ""
-

@@ -1,0 +1,112 @@
+name: Release to Cloud Run
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub environment and cloud target to release.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release:
+    name: Migrate, deploy, and smoke test ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    concurrency:
+      group: cloud-run-${{ inputs.environment }}
+      cancel-in-progress: false
+
+    env:
+      DEPLOYMENT_ENVIRONMENT: ${{ inputs.environment }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE }}
+      NEXT_PUBLIC_MAPTILER_KEY: ${{ vars.NEXT_PUBLIC_MAPTILER_KEY }}
+      NEXT_PUBLIC_MAP_STYLE_URL: ${{ vars.NEXT_PUBLIC_MAP_STYLE_URL }}
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/unitern/web:${{ github.sha }}
+
+    steps:
+      - name: Check out the released commit
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js for release tooling
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: roommate/package-lock.json
+
+      - name: Install locked release tooling
+        working-directory: roommate
+        run: npm ci
+
+      - name: Validate the release target
+        working-directory: roommate
+        run: npm run release:validate:cloud
+
+      - name: Authenticate with short-lived Google credentials
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Build the immutable application image
+        working-directory: roommate
+        run: >-
+          docker build
+          --build-arg NEXT_PUBLIC_MAPTILER_KEY="${NEXT_PUBLIC_MAPTILER_KEY}"
+          --build-arg NEXT_PUBLIC_MAP_STYLE_URL="${NEXT_PUBLIC_MAP_STYLE_URL}"
+          --tag "${IMAGE}"
+          .
+
+      - name: Push the immutable application image
+        run: docker push "${IMAGE}"
+
+      - name: Load migration-only database credentials
+        uses: google-github-actions/get-secretmanager-secrets@v3
+        with:
+          export_to_environment: true
+          secrets: |-
+            DATABASE_URL:${{ env.GCP_PROJECT_ID }}/unitern-database-url
+            DIRECT_DATABASE_URL:${{ env.GCP_PROJECT_ID }}/unitern-direct-database-url
+
+      - name: Reject an unsafe database target
+        working-directory: roommate
+        run: npm run db:validate:production
+
+      - name: Apply reviewed database migrations once
+        working-directory: roommate
+        run: npm run db:deploy
+
+      - name: Promote the image to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          region: ${{ env.GCP_REGION }}
+          service: ${{ env.CLOUD_RUN_SERVICE }}
+          image: ${{ env.IMAGE }}
+
+      - name: Verify the deployed system
+        working-directory: roommate
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
+        run: npm run smoke:production
