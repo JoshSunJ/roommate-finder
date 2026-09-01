@@ -2,7 +2,7 @@ resource "google_monitoring_uptime_check_config" "application_readiness" {
   count = var.deploy_application ? 1 : 0
 
   project      = var.project_id
-  display_name = "Unitern production readiness"
+  display_name = "Unitern ${var.environment_name} readiness"
   timeout      = "10s"
   period       = "300s"
 
@@ -23,4 +23,3 @@ resource "google_monitoring_uptime_check_config" "application_readiness" {
 
   depends_on = [google_project_service.required]
 }
-

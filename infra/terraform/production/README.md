@@ -1,9 +1,15 @@
-# Unitern production infrastructure
+# Unitern launch infrastructure
 
 This Terraform root owns Google Cloud APIs, Artifact Registry, workload
 identities, Secret Manager containers, Cloud Run, the public invoker policy, an
 uptime check, and a cost budget. Neon and Cloudflare R2 stay outside this state;
 their credentials enter Cloud Run through Secret Manager.
+
+The same declarations create `staging` and `production`, but each environment
+must use a separate Google Cloud project, database, R2 bucket, GitHub
+environment, and Terraform state prefix. Reusing code gives both environments
+the same architecture. Separating their resources prevents test data or a bad
+staging migration from affecting real users.
 
 ## Why deployment starts disabled
 
@@ -18,7 +24,7 @@ This produces a safe bootstrap sequence:
 3. Add one current version to every secret listed by `terraform output secret_ids`.
 4. Build and push an image tagged with the Git commit SHA.
 5. Set `container_image` to that immutable image and enable deployment.
-6. Apply again, then run the production smoke checks.
+6. Apply again, then run the deployed-system smoke checks.
 
 ## Initialize the remote backend
 
@@ -30,6 +36,10 @@ terraform init \
 terraform plan -out production.tfplan
 terraform apply production.tfplan
 ```
+
+For staging, copy `terraform.staging.tfvars.example` instead and initialize a
+fresh working directory or reconfigure the backend with the distinct prefix
+`unitern/staging`. Never point staging and production at the same state prefix.
 
 The backend arguments describe where Terraform state lives; they are not normal
 input variables. State is versioned in the private bucket created by the
@@ -66,8 +76,10 @@ not appear as infrastructure drift on the next plan.
 
 ## GitHub deployment variables
 
-After the first infrastructure apply, configure these non-secret repository
-variables:
+After each environment's first infrastructure apply, create matching `staging`
+and `production` environments under **GitHub repository settings → Environments**.
+Configure these non-secret variables inside each GitHub environment, not as one
+shared set of repository variables:
 
 ```text
 GCP_PROJECT_ID
@@ -80,7 +92,12 @@ NEXT_PUBLIC_MAP_STYLE_URL
 ```
 
 Use the matching Terraform outputs for the provider and service-account values.
-The public MapTiler browser key must be restricted to the production origin.
-None of these values are private credentials; Google Cloud authorization comes
-from the short-lived GitHub OIDC token. The workflow still targets GitHub's
-`production` environment so you can add a deployment approval rule separately.
+Each public MapTiler browser key must be restricted to its environment's origin.
+None of these values is a private credential; Google Cloud authorization comes
+from the short-lived GitHub OIDC token.
+
+Allow deployments from `master` in both GitHub environments. Configure a
+required reviewer on `production` when the repository plan supports it. Staging
+deploys automatically after a merge, while production runs only through the
+manual **Deploy production** workflow. See `docs/release-runbook.md` for the
+complete bootstrap, release, rollback, and failure-triage procedure.

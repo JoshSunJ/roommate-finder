@@ -11,6 +11,7 @@
     "test:integration": "tsx --test tests/integration/*.test.ts",
     "test:e2e": "playwright test",
     "smoke:production": "tsx scripts/smoke-production.ts",
+    "release:validate:cloud": "tsx scripts/validate-cloud-release.ts",
     "release:check": "npm run lint && npm test && npm run test:integration && npm run test:e2e && npm run build",
     "security:prune-rate-limits": "tsx scripts/prune-rate-limits.ts",
     "db:up": "docker compose up -d db",

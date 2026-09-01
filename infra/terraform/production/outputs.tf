@@ -1,3 +1,8 @@
+output "environment_name" {
+  description = "Deployment environment represented by this Terraform state."
+  value       = var.environment_name
+}
+
 output "artifact_registry_repository" {
   description = "Regional Docker repository used by the release workflow."
   value       = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.application.repository_id}"
@@ -32,4 +37,3 @@ output "secret_ids" {
   description = "Secret containers that require values before application deployment."
   value       = sort(values(local.secret_environment))
 }
-

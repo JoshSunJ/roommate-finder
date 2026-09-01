@@ -1,0 +1,22 @@
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - "roommate/**"
+      - "infra/terraform/**"
+      - ".github/workflows/deploy-staging.yml"
+      - ".github/workflows/release-cloud-run.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-cloud-run.yml
+    with:
+      environment: staging
