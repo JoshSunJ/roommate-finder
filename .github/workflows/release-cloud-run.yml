@@ -47,9 +47,9 @@ jobs:
           cache: npm
           cache-dependency-path: roommate/package-lock.json
 
-      - name: Install locked release tooling
+      - name: Install locked release tooling without application lifecycle scripts
         working-directory: roommate
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Validate the release target
         working-directory: roommate
@@ -87,6 +87,10 @@ jobs:
           secrets: |-
             DATABASE_URL:${{ env.GCP_PROJECT_ID }}/unitern-database-url
             DIRECT_DATABASE_URL:${{ env.GCP_PROJECT_ID }}/unitern-direct-database-url
+
+      - name: Generate the database client after credentials are available
+        working-directory: roommate
+        run: npm run db:generate
 
       - name: Reject an unsafe database target
         working-directory: roommate
