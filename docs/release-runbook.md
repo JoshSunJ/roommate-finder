@@ -108,6 +108,12 @@ The validator rejects missing values, placeholder values, malformed Google
 resource names, and releases started from a non-`master` branch before cloud
 authentication begins.
 
+The release job installs its locked Node.js toolchain with package lifecycle
+scripts disabled before this validation. Prisma generation runs only after the
+migration credentials have been loaded. This ordering prevents dependency
+installation from touching the database boundary or hiding a configuration
+error behind an unrelated post-install failure.
+
 `NEXT_PUBLIC_*` values are intentionally browser-visible build inputs. Restrict
 the MapTiler key by allowed HTTP origin; do not mistake a public browser key for
 a server secret.
