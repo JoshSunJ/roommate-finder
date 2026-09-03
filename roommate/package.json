@@ -24,6 +24,7 @@
     "deploy:validate": "tsx scripts/validate-production-environment.ts",
     "db:release": "npm run db:validate:production && npm run db:deploy",
     "email:validate:production": "tsx scripts/validate-production-email.ts",
+    "photos:validate:production": "tsx scripts/validate-production-photo-storage.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
