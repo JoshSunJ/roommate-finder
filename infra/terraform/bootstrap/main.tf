@@ -4,6 +4,12 @@ resource "google_project_service" "storage" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "cloud_resource_manager" {
+  project            = var.project_id
+  service            = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "google_storage_bucket" "terraform_state" {
   name                        = var.state_bucket_name
   project                     = var.project_id
@@ -28,6 +34,8 @@ resource "google_storage_bucket" "terraform_state" {
     }
   }
 
-  depends_on = [google_project_service.storage]
+  depends_on = [
+    google_project_service.cloud_resource_manager,
+    google_project_service.storage,
+  ]
 }
-

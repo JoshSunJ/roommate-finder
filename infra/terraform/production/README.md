@@ -45,6 +45,13 @@ The backend arguments describe where Terraform state lives; they are not normal
 input variables. State is versioned in the private bucket created by the
 bootstrap root.
 
+The Google provider sets `user_project_override = true` and uses the environment
+project as its billing/quota project. This is the recommended mode for local
+Application Default Credentials: API quota is attributed to the project being
+managed instead of the Google-owned OAuth client project. The operator therefore
+needs `serviceusage.services.use` on the environment project, and the bootstrap
+root enables Cloud Resource Manager before the main root reads project IAM.
+
 ## Secret handling
 
 Terraform intentionally creates secret containers without secret versions. Do
