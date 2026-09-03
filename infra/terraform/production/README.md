@@ -5,6 +5,10 @@ identities, Secret Manager containers, Cloud Run, the public invoker policy, an
 uptime check, and a cost budget. Neon and Cloudflare R2 stay outside this state;
 their credentials enter Cloud Run through Secret Manager.
 
+Budget thresholds measure gross usage before promotional or free-trial credits.
+This makes staging costs visible during a trial; the budget is an alerting
+guardrail, not an automatic spending cap.
+
 The same declarations create `staging` and `production`, but each environment
 must use a separate Google Cloud project, database, R2 bucket, GitHub
 environment, and Terraform state prefix. Reusing code gives both environments
