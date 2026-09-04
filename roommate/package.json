@@ -24,6 +24,7 @@
     "deploy:validate": "tsx scripts/validate-production-environment.ts",
     "db:release": "npm run db:validate:production && npm run db:deploy",
     "email:validate:production": "tsx scripts/validate-production-email.ts",
+    "photos:validate:production": "tsx scripts/validate-production-photo-storage.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
@@ -62,8 +63,9 @@
   },
   "overrides": {
     "deepmerge-ts": "8.0.0",
-    "fast-uri": "3.1.5",
+    "fast-uri": "3.1.7",
     "js-yaml": "4.3.1",
+    "mysql2": "3.24.3",
     "minimatch@3.1.5": {
       "brace-expansion": "1.1.18"
     },

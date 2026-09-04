@@ -5,6 +5,10 @@ identities, Secret Manager containers, Cloud Run, the public invoker policy, an
 uptime check, and a cost budget. Neon and Cloudflare R2 stay outside this state;
 their credentials enter Cloud Run through Secret Manager.
 
+Budget thresholds measure gross usage before promotional or free-trial credits.
+This makes staging costs visible during a trial; the budget is an alerting
+guardrail, not an automatic spending cap.
+
 The same declarations create `staging` and `production`, but each environment
 must use a separate Google Cloud project, database, R2 bucket, GitHub
 environment, and Terraform state prefix. Reusing code gives both environments
@@ -44,6 +48,13 @@ fresh working directory or reconfigure the backend with the distinct prefix
 The backend arguments describe where Terraform state lives; they are not normal
 input variables. State is versioned in the private bucket created by the
 bootstrap root.
+
+The Google provider sets `user_project_override = true` and uses the environment
+project as its billing/quota project. This is the recommended mode for local
+Application Default Credentials: API quota is attributed to the project being
+managed instead of the Google-owned OAuth client project. The operator therefore
+needs `serviceusage.services.use` on the environment project, and the bootstrap
+root enables Cloud Resource Manager before the main root reads project IAM.
 
 ## Secret handling
 

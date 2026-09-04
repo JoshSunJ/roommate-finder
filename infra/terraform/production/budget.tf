@@ -5,7 +5,8 @@ resource "google_billing_budget" "production" {
   display_name    = "Unitern ${var.environment_name} monthly budget"
 
   budget_filter {
-    projects = ["projects/${data.google_project.current.number}"]
+    projects               = ["projects/${data.google_project.current.number}"]
+    credit_types_treatment = "EXCLUDE_ALL_CREDITS"
   }
 
   amount {

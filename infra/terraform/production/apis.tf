@@ -2,6 +2,7 @@ locals {
   required_apis = toset([
     "artifactregistry.googleapis.com",
     "billingbudgets.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "logging.googleapis.com",
@@ -20,4 +21,3 @@ resource "google_project_service" "required" {
   service            = each.value
   disable_on_destroy = false
 }
-

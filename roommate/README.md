@@ -226,6 +226,18 @@ The bucket must permit public reads through `PHOTO_PUBLIC_BASE_URL`, but write
 credentials remain server-only. Never prefix storage credentials with
 `NEXT_PUBLIC_`.
 
+After configuring the real bucket and credentials, verify all three required
+operations with:
+
+```bash
+npm run photos:validate:production
+```
+
+The preflight uploads a one-pixel image, reads it through the configured public
+URL, and removes it again. A successful configuration check alone is not enough:
+this proves that the runtime credentials can write and delete while browsers can
+read through the public delivery URL.
+
 ## Release confidence and production operations
 
 Production readiness is a chain of evidence, not a single successful browser
@@ -310,8 +322,9 @@ which address supplied the header.
 4. Apply reviewed migrations once with `npm run db:release`.
 5. Deploy the immutable container image to staging.
 6. Run `SMOKE_BASE_URL=<staging-url> npm run smoke:production`.
-7. Manually test one real signup email, password reset, photo upload, and map search.
-8. Promote the same image to production, run smoke checks again, and monitor errors.
+7. Run `npm run photos:validate:production` with the staging storage configuration.
+8. Manually test one real signup email, password reset, photo upload, and map search.
+9. Promote the same image to production, run smoke checks again, and monitor errors.
 
 Code can be release-ready before infrastructure is provisioned. The application
 is not operationally production-ready until managed PostgreSQL backups and TLS,
