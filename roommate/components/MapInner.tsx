@@ -4,18 +4,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Map, {
-  Layer,
   Marker,
   NavigationControl,
   Popup,
-  Source,
   type MapRef,
 } from "react-map-gl/maplibre";
+import type { Feature, LineString } from "geojson";
+import type { Map as MapLibreMap } from "maplibre-gl";
 
+import AnimatedCommuteRoute from "@/components/AnimatedCommuteRoute";
 import { mapStyle } from "@/features/map/config";
 import type { CommuteRoute } from "@/features/commute/types";
 import type { Coordinates, Listing } from "@/features/listings/types";
 import type { Place } from "@/features/places/types";
+import type { CommuteMode } from "@/features/preferences/types";
 
 type Props = {
   places: Place[];
@@ -25,6 +27,9 @@ type Props = {
   onSelectSavedHome: (listingId: number) => void;
   focusCoordinates: Coordinates;
   roadRoute: CommuteRoute | null;
+  displayedMode: CommuteMode;
+  routeLoading: boolean;
+  routeUnavailable: boolean;
 };
 
 type SelectedMarker =
@@ -40,10 +45,15 @@ export default function MapInner({
   onSelectSavedHome,
   focusCoordinates,
   roadRoute,
+  displayedMode,
+  routeLoading,
+  routeUnavailable,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [nativeMap, setNativeMap] = useState<MapLibreMap | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<SelectedMarker>(null);
+  const [routeReplay, setRouteReplay] = useState(0);
   const highlightedPlace = useMemo(
     () => places.find((place) => place.id === highlightedPlaceId) ?? places[0],
     [highlightedPlaceId, places],
@@ -57,25 +67,38 @@ export default function MapInner({
   const commuteHome = selectedHomeId === null
     ? undefined
     : savedListings.find((listing) => listing.id === selectedHomeId);
-  const commuteLine = useMemo(() => {
-    if (!commuteHome?.coordinates || !highlightedPlace) return null;
+  const commuteLine = useMemo<Feature<LineString> | null>(() => {
+    if (!commuteHome?.coordinates || !highlightedPlace || !roadRoute) return null;
 
-    return roadRoute ? {
+    return {
       type: "Feature" as const,
       properties: { source: "road-route" },
       geometry: roadRoute.geometry,
-    } : {
-      type: "Feature" as const,
-      properties: { source: "estimate" },
-      geometry: {
-        type: "LineString" as const,
-        coordinates: [
-          [commuteHome.coordinates.longitude, commuteHome.coordinates.latitude],
-          [highlightedPlace.coordinates.longitude, highlightedPlace.coordinates.latitude],
-        ],
-      },
     };
   }, [commuteHome, highlightedPlace, roadRoute]);
+  const routeAnimationKey = commuteLine
+    ? [
+      commuteLine.properties?.source,
+      selectedHomeId,
+      highlightedPlaceId,
+      displayedMode,
+      commuteLine.geometry.coordinates.length,
+      routeReplay,
+    ].join(":")
+    : "no-route";
+  const routePrompt = savedListings.length === 0
+    ? "Save a mapped home in this city to create a route."
+    : !commuteHome?.coordinates
+      ? "Choose a saved home from the panel to create a route."
+      : !highlightedPlace
+        ? "Search for a campus or workplace to create a route."
+        : displayedMode === "transit"
+          ? "Schedule-aware transit routing is not connected yet. Choose drive, bike, walk, or ride share for a street route."
+          : routeLoading
+            ? `Calculating the ${displayedMode} route over real streets…`
+            : routeUnavailable
+              ? `The ${displayedMode} routing service is unavailable. No fake straight-line route is shown.`
+              : "Choose a supported travel mode to calculate a route.";
 
   useEffect(() => {
     if (!mapReady) return;
@@ -106,27 +129,29 @@ export default function MapInner({
         ref={mapRef}
         initialViewState={{ longitude: focusCoordinates.longitude, latitude: focusCoordinates.latitude, zoom: 12.5 }}
         mapStyle={mapStyle}
-        reuseMaps
-        onLoad={() => setMapReady(true)}
-        onStyleData={() => setMapReady(true)}
+        onLoad={() => {
+          setNativeMap(mapRef.current?.getMap() ?? null);
+          setMapReady(true);
+        }}
+        onStyleData={() => {
+          const map = mapRef.current?.getMap();
+          if (map) setNativeMap(map);
+          setMapReady(true);
+        }}
         onClick={() => setSelectedMarker(null)}
         aria-label="Area map showing destinations and saved homes"
       >
         <NavigationControl position="top-right" showCompass={false} />
 
-        {commuteLine && (
-          <Source id="commute-preview" type="geojson" data={commuteLine}>
-            <Layer
-              id="commute-preview-line"
-              type="line"
-              paint={{
-                "line-color": "#d5ff52",
-                "line-width": 5,
-                "line-opacity": 0.9,
-                ...(roadRoute ? {} : { "line-dasharray": [1.4, 1.2] }),
-              }}
-            />
-          </Source>
+        {commuteLine && nativeMap && (
+          <AnimatedCommuteRoute
+            key={routeAnimationKey}
+            map={nativeMap}
+            route={commuteLine}
+            isEstimate={false}
+            mode={displayedMode}
+            replayRequested={routeReplay > 0}
+          />
         )}
 
         {places.map((place) => {
@@ -215,10 +240,32 @@ export default function MapInner({
         )}
       </Map>
 
+      {commuteLine ? (
+        <button
+          type="button"
+          className="route-replay"
+          onClick={() => setRouteReplay((currentReplay) => currentReplay + 1)}
+          aria-label="Replay commute route animation"
+        >
+          Replay {displayedMode} route <span aria-hidden="true">↻</span>
+        </button>
+      ) : (
+        <aside className="route-prompt" aria-live="polite">
+          <strong>Route animation</strong>
+          <span>{routePrompt}</span>
+          {savedListings.length === 0 && <Link href="/#listings">Browse homes ↗</Link>}
+        </aside>
+      )}
+
       <div className="area-map-legend">
         <span><i className="legend-destination" />Destination</span>
         <span><i className="legend-home" />Saved home</span>
-        {roadRoute && <span><i className="legend-route" />{roadRoute.mode} route</span>}
+        {commuteLine && (
+          <span>
+            <i className="legend-route" />
+            {displayedMode} road route
+          </span>
+        )}
       </div>
     </div>
   );
