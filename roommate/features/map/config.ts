@@ -24,6 +24,21 @@ export function createMapTilerStyleUrl(apiKey: string): string {
   return styleUrl.toString();
 }
 
+export function normalizePublicEnvValue(value: string | undefined): string | undefined {
+  const trimmedValue = value?.trim();
+  if (!trimmedValue) return undefined;
+
+  const firstCharacter = trimmedValue.at(0);
+  const lastCharacter = trimmedValue.at(-1);
+  const isWrappedInMatchingQuotes =
+    (firstCharacter === '"' && lastCharacter === '"') ||
+    (firstCharacter === "'" && lastCharacter === "'");
+
+  if (!isWrappedInMatchingQuotes) return trimmedValue;
+
+  return trimmedValue.slice(1, -1).trim() || undefined;
+}
+
 export function addMapTilerKey(styleUrl: string, apiKey: string | undefined): string {
   if (!apiKey) return styleUrl;
 
@@ -38,8 +53,8 @@ export function addMapTilerKey(styleUrl: string, apiKey: string | undefined): st
 
 // NEXT_PUBLIC_ is intentional: the browser must know which public map style
 // to request. Never put a secret provider credential in this value.
-const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY?.trim();
-const configuredStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim();
+const mapTilerKey = normalizePublicEnvValue(process.env.NEXT_PUBLIC_MAPTILER_KEY);
+const configuredStyleUrl = normalizePublicEnvValue(process.env.NEXT_PUBLIC_MAP_STYLE_URL);
 
 export const mapStyle: string | StyleSpecification =
   configuredStyleUrl

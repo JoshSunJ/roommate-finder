@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   addMapTilerKey,
   createMapTilerStyleUrl,
+  normalizePublicEnvValue,
 } from "../features/map/config";
 
 test("creates MapTiler's MapLibre vector-style URL", () => {
@@ -33,4 +34,10 @@ test("preserves a key already present in a configured style URL", () => {
   const styleUrl = "https://api.maptiler.com/maps/streets-v4/style.json?key=existing";
 
   assert.equal(addMapTilerKey(styleUrl, "replacement"), styleUrl);
+});
+
+test("removes accidental matching quotes from public environment values", () => {
+  assert.equal(normalizePublicEnvValue('  "browser-key"  '), "browser-key");
+  assert.equal(normalizePublicEnvValue("'browser-key'"), "browser-key");
+  assert.equal(normalizePublicEnvValue("browser-key"), "browser-key");
 });
